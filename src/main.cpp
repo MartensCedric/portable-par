@@ -2,14 +2,11 @@
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
 #include <GL/gl.h>
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb/stb_image.h>
-
 #include "shader.h"
+#include "texture.h"
 
 int main(int argc, char** argv)
 {
-    std::cout << "Hello World!" << std::endl;
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
     {
         std::cerr << "Failed to initialize SDL" << std::endl;
@@ -101,28 +98,9 @@ int main(int argc, char** argv)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-
-    uint32_t texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    stbi_set_flip_vertically_on_load(true);
-    int width, height, channels;
-    uint8_t* data = stbi_load("assets/sprites/checkerboard.png", &width, &height, &channels, 0);
-    if(!data)
-    {
-        std::cerr << "Failed to open: checkerboard.png" << std::endl;
-        return -1;
-    }
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    stbi_image_free(data);
+    Texture tex_checkerboard;
+    tex_checkerboard.load("assets/sprites/checkerboard.png");
+    tex_checkerboard.use();
 
     int texture_uniform_location = glGetUniformLocation(passthrough_program, "current_texture");
     glUseProgram(passthrough_program);
@@ -165,7 +143,7 @@ int main(int argc, char** argv)
 
         glUseProgram(passthrough_program);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        tex_checkerboard.use();
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
