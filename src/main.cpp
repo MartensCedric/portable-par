@@ -4,6 +4,11 @@
 #include <GL/gl.h>
 #include "shader.h"
 #include "texture.h"
+#include <glm/glm.hpp>
+#include <glm/matrix.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 int main(int argc, char** argv)
 {
@@ -37,6 +42,11 @@ int main(int argc, char** argv)
 
     glViewport(0, 0, 1280, 720);
 
+    glm::mat4 proj = glm::perspective(glm::radians(45.f), (float)1280.f/(float)720.f, 0.1f, 100.f);
+    glm::mat4 model = glm::mat4(1.0f);
+
+    glm::mat4 view = glm::mat4(1.0f);
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 
     float vertices[] = {
         0.5f, 0.5f, 0.0f,   1.0f, 1.0f, // top right
@@ -112,6 +122,12 @@ int main(int argc, char** argv)
     glClearColor(0, 0, 0, 1.0f);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    uint32_t last_time_ms = SDL_GetTicks();
+    uint32_t ms_per_tick = 16;
+    uint64_t accumulator = 0;
+    uint32_t delta = 16;
+    float delta_t = static_cast<float>(delta) / 1000.f;
     while(is_running)
     {
         SDL_Event e;
@@ -139,14 +155,39 @@ int main(int argc, char** argv)
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+
+        model = glm::rotate(model, glm::radians(-15.f * delta_t), glm::vec3(1.0f, 0.0f, 0.0f));
+
+
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(passthrough_program);
+
+        int model_location = glGetUniformLocation(passthrough_program, "model");
+        glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model));
+
+        int view_location = glGetUniformLocation(passthrough_program, "view");
+        glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view));
+
+        int projection_location = glGetUniformLocation(passthrough_program, "projection");
+        glUniformMatrix4fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
+
+
         glActiveTexture(GL_TEXTURE0);
         tex_checkerboard.use();
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
+
+        uint32_t current_time_ms = SDL_GetTicks();
+        delta = current_time_ms -  last_time_ms;
+        delta_t = static_cast<float>(delta) / 1000.f;
+        accumulator += delta;
+        last_time_ms = current_time_ms;
+
+        if(delta < ms_per_tick)
+            SDL_Delay(ms_per_tick - delta);
+
         SDL_GL_SwapWindow(window);
     }
 
