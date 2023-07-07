@@ -5,7 +5,13 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 
-add_executable(${PROJECT_NAME} main.cpp)
+include_directories(include)
+
+file(GLOB SOURCE_FILES
+    ${PROJECT_SOURCE_DIR}/src/*.cpp
+)
+
+add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME} SDL2 SDL2_image OpenGL::GL GLEW)
 
 add_custom_target(copy_assets

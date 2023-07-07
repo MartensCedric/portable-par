@@ -3,6 +3,8 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 
+#include "shader.h"
+
 int main(int argc, char** argv)
 {
     std::cout << "Hello World!" << std::endl;
@@ -42,6 +44,9 @@ int main(int argc, char** argv)
         0.5f, -0.5f, 0.0f,
         0.0f, 0.5f, 0.0f
     };
+
+
+    Shader v_passthrough("assets/passthrough.vs", shader_type::vertex);
 
     unsigned int vbo;
     glGenBuffers(1, &vbo);
