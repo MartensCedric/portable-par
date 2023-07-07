@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     glm::mat4 model = glm::mat4(1.0f);
 
     glm::mat4 view = glm::mat4(1.0f);
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f));
 
     float vertices[] = {
             -1.0, -1.0, 1.0f,   0.0f, 0.0f, // DL
@@ -61,10 +61,30 @@ int main(int argc, char** argv)
     };
 
     unsigned int indices[] = {
+            // front
             0,1,3,
             1,2,3,
+
+            // back
             7, 5, 4,
-                7, 6, 5,
+            7, 6, 5,
+
+            // left
+            0, 3, 4,
+            4, 3, 7,
+            // right
+            1, 5, 2,
+            5, 6, 2,
+
+            // top
+            2, 6, 7,
+            3, 2, 7,
+
+            // bottom
+            0, 4, 1,
+            4,5, 1,
+
+
     };
 
 
@@ -180,7 +200,7 @@ int main(int argc, char** argv)
         }
 
 
-        model = glm::rotate(model, glm::radians(-15.f * delta_t), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(-15.f * delta_t), glm::vec3(1.0f, -0.35f, 0.0f));
 
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -200,7 +220,7 @@ int main(int argc, char** argv)
         glActiveTexture(GL_TEXTURE0);
         tex_checkerboard.use();
         glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
         uint32_t current_time_ms = SDL_GetTicks();
