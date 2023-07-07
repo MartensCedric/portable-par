@@ -10,6 +10,11 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
+
 int main(int argc, char** argv)
 {
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -47,6 +52,19 @@ int main(int argc, char** argv)
 
     glm::mat4 view = glm::mat4(1.0f);
     view = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f));
+
+    Assimp::Importer importer;
+    const aiScene* scene = importer.ReadFile("assets/mesh/test.obj",
+                                             aiProcess_CalcTangentSpace |
+                                             aiProcess_Triangulate |
+                                             aiProcess_JoinIdenticalVertices |
+                                             aiProcess_SortByPType);
+
+    if(scene == nullptr)
+    {
+        std::cerr << "Failed to load test.obj" << std::endl;
+        return -1;
+    }
 
     float vertices[] = {
             -1.0, -1.0, 1.0f,   0.0f, 0.0f, // DL
