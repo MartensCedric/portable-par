@@ -15,10 +15,10 @@ class Shader
 {
 private:
     std::string filename;
-    shader_type shader_type;
+    shader_type type;
     u_int32_t shader_id;
 
-    std::string read_file(const std::string& filename);
+    static std::string read_file(const std::string& filename);
 
 public:
     explicit Shader(const char* filename, enum shader_type shader_type);

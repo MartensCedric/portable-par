@@ -9,7 +9,7 @@
 #include <iterator>
 #include <GL/glew.h>
 
-Shader::Shader(const char *filename, enum shader_type shader_type) : filename(filename), shader_type(shader_type) {
+Shader::Shader(const char *filename, enum shader_type shader_type) : filename(filename), type(shader_type) {
 }
 
 
@@ -34,7 +34,7 @@ bool Shader::compile() {
 
     std::string contents = read_file(this->filename);
     GLenum gl_shader_type;
-    switch(shader_type)
+    switch(type)
     {
         case vertex:
             gl_shader_type = GL_VERTEX_SHADER;

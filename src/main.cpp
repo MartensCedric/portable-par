@@ -40,22 +40,69 @@ int main(int argc, char** argv)
 
 
     float vertices[] = {
-        -0.5f, -0.5f, 0.0f,
+        0.5f, 0.5f, 0.0f,
         0.5f, -0.5f, 0.0f,
-        0.0f, 0.5f, 0.0f
+        -0.5f, -0.5f, 0.0f,
+        -0.5, 0.5f, 0.0f
+    };
+
+    unsigned int indices[] = {
+            0,1,3,
+            1,2,3
     };
 
 
-    Shader v_passthrough("assets/passthrough.vs", shader_type::vertex);
+    unsigned int passthrough_program = glCreateProgram();
+    Shader* v_passthrough = new Shader("assets/shaders/passthrough.vs", shader_type::vertex);
+    Shader* f_passthrough = new Shader("assets/shaders/passthrough.fs", shader_type::fragment);
+
+    if(!v_passthrough->compile()) return -1;
+    if(!f_passthrough->compile()) return -1;
+
+    glAttachShader(passthrough_program, v_passthrough->get_shader_id());
+    glAttachShader(passthrough_program, f_passthrough->get_shader_id());
+    glLinkProgram(passthrough_program);
+
+    delete v_passthrough;
+    delete f_passthrough;
+
+    int program_success;
+    char log[512];
+    glGetProgramiv(passthrough_program, GL_LINK_STATUS, &program_success);
+    if(!program_success)
+    {
+        glGetProgramInfoLog(passthrough_program, 512, nullptr, log);
+        std::cerr << "Shader program failed: " << log << std::endl;
+        return -1;
+    }
 
     unsigned int vbo;
     glGenBuffers(1, &vbo);
 
+    unsigned ebo;
+    glGenBuffers(1, &ebo);
+
+    unsigned int vao;
+    glGenVertexArrays(1, &vao);
+
+    glBindVertexArray(vao);
+
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    bool is_running = true;
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+
+    bool is_running = true;
+    bool wireframe_mode = false;
+
+    glClearColor(0, 0, 0, 1.0f);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     while(is_running)
     {
         SDL_Event e;
@@ -66,11 +113,30 @@ int main(int argc, char** argv)
                 case SDL_QUIT:
                     is_running = false;
                     break;
+                case SDL_KEYDOWN:
+                    if(e.key.keysym.sym == SDL_KeyCode::SDLK_p)
+                    {
+                        wireframe_mode = !wireframe_mode;
+                        std::cout << "Wireframe mode: " << wireframe_mode << std::endl;
+                    }
+                    break;
             }
             
             SDL_UpdateWindowSurface(window);
         }
-        glClearColor(0, 0, 0, 1.0f);
+
+        if(wireframe_mode)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        else
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glUseProgram(passthrough_program);
+        glBindVertexArray(vao);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+        SDL_GL_SwapWindow(window);
     }
 
 
