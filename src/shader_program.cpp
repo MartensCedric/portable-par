@@ -8,8 +8,8 @@
 ShaderProgram::ShaderProgram(Shader* vShader, Shader* fShader)
 {
     this->id = glCreateProgram();
-    glAttachShader(vShader->get_shader_id());
-    glAttachShader(fShader->get_shader_id());
+    glAttachShader(this->id, vShader->get_shader_id());
+    glAttachShader(this->id, fShader->get_shader_id());
     glLinkProgram(this->id);
 
     int success;

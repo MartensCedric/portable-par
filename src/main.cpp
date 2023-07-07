@@ -51,18 +51,22 @@ int main(int argc, char** argv)
     glm::mat4 view = glm::mat4(1.0f);
     view = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f));
 
+    glm::vec3 light_pos = glm::vec3(5.0, 10.0, 2.0);
+
     Model* current_model = new Model("assets/mesh/test.obj");
-    unsigned int passthrough_program = glCreateProgram();
     Shader* v_passthrough = new Shader("assets/shaders/passthrough.vs", shader_type::vertex);
     Shader* f_passthrough = new Shader("assets/shaders/passthrough.fs", shader_type::fragment);
+    Shader* f_phong = new Shader("assets/shaders/phong.fs", shader_type::fragment);
 
     if(!v_passthrough->compile()) return -1;
     if(!f_passthrough->compile()) return -1;
+    if(!f_phong->compile()) return -1;
 
-    ShaderProgram* current_shader = new ShaderProgram(v_passthrough, f_passthrough);
+    ShaderProgram* current_shader = new ShaderProgram(v_passthrough, f_phong);
 
     delete v_passthrough;
     delete f_passthrough;
+    delete f_phong;
 
     Texture tex_checkerboard;
     tex_checkerboard.load("assets/sprites/checkerboard.png");
@@ -134,16 +138,19 @@ int main(int argc, char** argv)
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(passthrough_program);
+        current_shader->use();
 
-        int model_location = glGetUniformLocation(passthrough_program, "model");
+        int model_location = glGetUniformLocation(current_shader->get_id(), "model");
         glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model));
 
-        int view_location = glGetUniformLocation(passthrough_program, "view");
+        int view_location = glGetUniformLocation(current_shader->get_id(), "view");
         glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view));
 
-        int projection_location = glGetUniformLocation(passthrough_program, "projection");
+        int projection_location = glGetUniformLocation(current_shader->get_id(), "projection");
         glUniformMatrix4fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
+
+        int light_pos_location = glGetUniformLocation(current_shader->get_id(), "light_position");
+        glUniform3fv(light_pos_location, 1, &light_pos[0]);
 
 
         glActiveTexture(GL_TEXTURE0);
