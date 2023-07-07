@@ -2,6 +2,8 @@
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
 #include <GL/gl.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
 
 #include "shader.h"
 
@@ -40,10 +42,10 @@ int main(int argc, char** argv)
 
 
     float vertices[] = {
-        0.5f, 0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
-        -0.5, 0.5f, 0.0f
+        0.5f, 0.5f, 0.0f,   1.0f, 1.0f, // top right
+        0.5f, -0.5f, 0.0f,  1.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, // bottom left
+        -0.5, 0.5f, 0.0f, 0.0f, 1.0f, // top left
     };
 
     unsigned int indices[] = {
@@ -93,9 +95,38 @@ int main(int argc, char** argv)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+
+    uint32_t texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    stbi_set_flip_vertically_on_load(true);
+    int width, height, channels;
+    uint8_t* data = stbi_load("assets/sprites/checkerboard.png", &width, &height, &channels, 0);
+    if(!data)
+    {
+        std::cerr << "Failed to open: checkerboard.png" << std::endl;
+        return -1;
+    }
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    stbi_image_free(data);
+
+    int texture_uniform_location = glGetUniformLocation(passthrough_program, "current_texture");
+    glUseProgram(passthrough_program);
+    glUniform1i(texture_uniform_location, 0);
 
     bool is_running = true;
     bool wireframe_mode = false;
@@ -133,6 +164,8 @@ int main(int argc, char** argv)
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(passthrough_program);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
