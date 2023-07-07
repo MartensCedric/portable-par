@@ -49,15 +49,22 @@ int main(int argc, char** argv)
     view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 
     float vertices[] = {
-        0.5f, 0.5f, 0.0f,   1.0f, 1.0f, // top right
-        0.5f, -0.5f, 0.0f,  1.0f, 0.0f, // bottom right
-        -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, // bottom left
-        -0.5, 0.5f, 0.0f, 0.0f, 1.0f, // top left
+            -1.0, -1.0, 1.0f,   0.0f, 0.0f, // DL
+            1.0, -1.0, 1.0,     1.0f, 0.0f, // DR
+            1.0, 1.0, 1.0,   1.0f, 1.0f, // UR
+            -1.0, 1.0, 1.0,  0.0f, 1.0f, // UL
+
+            -1.0, -1.0, -1.0f,  1.0f, 0.0f, // DR
+            1.0, -1.0, -1.0,  0.0f, 0.0f, // DL
+            1.0, 1.0, -1.0,0.0f, 1.0f, // UL
+            -1.0, 1.0, -1.0, 1.0f, 1.0f, // UR
     };
 
     unsigned int indices[] = {
             0,1,3,
-            1,2,3
+            1,2,3,
+            7, 5, 4,
+                7, 6, 5,
     };
 
 
@@ -118,9 +125,12 @@ int main(int argc, char** argv)
 
     bool is_running = true;
     bool wireframe_mode = false;
+    bool cull_faces = false;
 
     glClearColor(0, 0, 0, 1.0f);
     glEnable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     uint32_t last_time_ms = SDL_GetTicks();
@@ -139,12 +149,17 @@ int main(int argc, char** argv)
                     is_running = false;
                     break;
                 case SDL_KEYDOWN:
-                    if(e.key.keysym.sym == SDL_KeyCode::SDLK_p)
+                    switch(e.key.keysym.sym)
                     {
-                        wireframe_mode = !wireframe_mode;
-                        std::cout << "Wireframe mode: " << wireframe_mode << std::endl;
+                        case SDL_KeyCode::SDLK_p:
+                            wireframe_mode = !wireframe_mode;
+                            std::cout << "Wireframe mode: " << wireframe_mode << std::endl;
+                            break;
+                        case SDL_KeyCode::SDLK_c:
+                            cull_faces = !cull_faces;
+                            std::cout << "cull face mode: " << cull_faces << std::endl;
+                            break;
                     }
-                    break;
             }
             
             SDL_UpdateWindowSurface(window);
@@ -155,11 +170,20 @@ int main(int argc, char** argv)
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+        if(cull_faces)
+        {
+            glEnable(GL_CULL_FACE);
+        }
+        else
+        {
+            glDisable(GL_CULL_FACE);
+        }
+
 
         model = glm::rotate(model, glm::radians(-15.f * delta_t), glm::vec3(1.0f, 0.0f, 0.0f));
 
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(passthrough_program);
 
@@ -176,7 +200,7 @@ int main(int argc, char** argv)
         glActiveTexture(GL_TEXTURE0);
         tex_checkerboard.use();
         glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
         uint32_t current_time_ms = SDL_GetTicks();
