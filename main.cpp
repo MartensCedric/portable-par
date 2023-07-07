@@ -34,10 +34,39 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    glClearColor(0, 0, 0, 1.0f);
+    glViewport(0, 0, 1280, 720);
 
-    SDL_UpdateWindowSurface(window);
-    SDL_Delay(5000);
+
+    float vertices[] = {
+        -0.5f, -0.5f, 0.0f,
+        0.5f, -0.5f, 0.0f,
+        0.0f, 0.5f, 0.0f
+    };
+
+    unsigned int vbo;
+    glGenBuffers(1, &vbo);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    bool is_running = true;
+
+    while(is_running)
+    {
+        SDL_Event e;
+        while(SDL_PollEvent(&e) > 0)
+        {
+            switch(e.type)
+            {
+                case SDL_QUIT:
+                    is_running = false;
+                    break;
+            }
+            
+            SDL_UpdateWindowSurface(window);
+        }
+        glClearColor(0, 0, 0, 1.0f);
+    }
 
 
     SDL_GL_DeleteContext(main_context);
