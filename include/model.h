@@ -10,13 +10,19 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+
 class Model
 {
 public:
-    Model(const char* filename);
+    explicit Model(const char* filename);
+    void render(ShaderProgram* shader_program);
     void render();
+    void set_shader(ShaderProgram* shader_program);
+    ShaderProgram* get_shader() const;
 private:
     std::vector<Mesh> meshes;
+    glm::mat4 model;
+    ShaderProgram* shader_program = nullptr;
     void process_mesh(aiMesh* mesh, const aiScene* scene);
 
 };

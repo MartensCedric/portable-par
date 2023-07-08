@@ -3,11 +3,16 @@
 //
 
 #include "model.h"
+#include "shader_program.h"
 
 #include <iostream>
+#include <GL/glew.h>
+#include <glm/gtc/type_ptr.hpp>
 
 Model::Model(const char *filename) {
     Assimp::Importer importer;
+
+    model = glm::mat4(1.0f);
     const aiScene* scene = importer.ReadFile(filename, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
@@ -53,7 +58,26 @@ void Model::process_mesh(aiMesh *mesh, const aiScene *scene) {
     meshes.emplace_back(vertices, indices, textures);
 }
 
-void Model::render() {
+void Model::render(ShaderProgram* shader) {
+
+    int model_location = glGetUniformLocation(shader->get_id(), "model");
+    glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model));
+
     for(auto& m : meshes)
-        m.render();
+        m.render(shader);
+}
+
+void Model::render() {
+    if(this->shader_program == nullptr)
+        throw std::runtime_error("No shader associated with model!");
+    render(this->shader_program);
+}
+
+void Model::set_shader(ShaderProgram* shader)
+{
+    this->shader_program = shader;
+}
+
+ShaderProgram *Model::get_shader() const {
+    return shader_program;
 }

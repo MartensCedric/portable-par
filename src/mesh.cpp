@@ -8,6 +8,7 @@
 
 #include <GL/glew.h>
 #include <GL/gl.h>
+#include <glm/gtc/type_ptr.hpp>
 
 Mesh::Mesh(const std::vector<vertex_t>& vertices, const std::vector<uint32_t>& indices,  const std::vector<Texture*>& textures)
 : vertices(vertices), indices(indices), textures(textures)
@@ -36,8 +37,9 @@ Mesh::Mesh(const std::vector<vertex_t>& vertices, const std::vector<uint32_t>& i
     glBindVertexArray(0);
 }
 
-void Mesh::render()
+void Mesh::render(ShaderProgram* shader_program)
 {
+    shader_program->use();
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(this->vao);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);

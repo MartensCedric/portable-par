@@ -8,6 +8,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include "texture.h"
+#include "shader_program.h"
 
 struct vertex_t
 {
@@ -27,7 +28,7 @@ private:
 
 public:
     Mesh(const std::vector<vertex_t>& vertices, const std::vector<uint32_t>& indices,  const std::vector<Texture*>& textures);
-    void render();
+    void render(ShaderProgram* shader);
 };
 
 #endif //GMTK_2023_MESH_H

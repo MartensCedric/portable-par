@@ -45,15 +45,27 @@ int main(int argc, char** argv)
 
     glViewport(0, 0, 1280, 720);
 
+    glm::vec3 camera_position = glm::vec3(0.0f, 0.0f, 5.0f);
+    glm::vec3 camera_target = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 camera_direction = glm::normalize(camera_position - camera_target);
+
+    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 camera_right = glm::normalize(glm::cross(up, camera_direction));
+
+    glm::vec3 camera_up = glm::normalize(glm::cross(camera_direction, camera_right));
+
     glm::mat4 proj = glm::perspective(glm::radians(45.f), (float)1280.f/(float)720.f, 0.1f, 100.f);
-    glm::mat4 model = glm::mat4(1.0f);
 
     glm::mat4 view = glm::mat4(1.0f);
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f));
+    view = glm::lookAt(camera_position,camera_target, camera_up);
 
     glm::vec3 light_pos = glm::vec3(5.0, 10.0, 2.0);
 
-    Model* current_model = new Model("assets/mesh/test.obj");
+    Model* target_model = new Model("assets/mesh/test.obj");
+    Model* light_model = new Model("assets/mesh/cube.obj");
+
+    std::vector<Model*> models = {target_model, light_model};
+
     Shader* v_passthrough = new Shader("assets/shaders/passthrough.vs", shader_type::vertex);
     Shader* f_passthrough = new Shader("assets/shaders/passthrough.fs", shader_type::fragment);
     Shader* f_phong = new Shader("assets/shaders/phong.fs", shader_type::fragment);
@@ -62,7 +74,11 @@ int main(int argc, char** argv)
     if(!f_passthrough->compile()) return -1;
     if(!f_phong->compile()) return -1;
 
-    ShaderProgram* current_shader = new ShaderProgram(v_passthrough, f_phong);
+    ShaderProgram* phong_shader = new ShaderProgram(v_passthrough, f_phong);
+    ShaderProgram* texture_shader = new ShaderProgram(v_passthrough, f_passthrough);
+
+    target_model->set_shader(phong_shader);
+    light_model->set_shader(texture_shader);
 
     delete v_passthrough;
     delete f_passthrough;
@@ -71,10 +87,6 @@ int main(int argc, char** argv)
     Texture tex_checkerboard;
     tex_checkerboard.load("assets/sprites/checkerboard.png");
     tex_checkerboard.use();
-
-    int texture_uniform_location = glGetUniformLocation(current_shader->get_id(), "current_texture");
-    current_shader->use();
-    glUniform1i(texture_uniform_location, 0);
 
     bool is_running = true;
     bool wireframe_mode = false;
@@ -133,30 +145,31 @@ int main(int argc, char** argv)
         }
 
 
-        model = glm::rotate(model, glm::radians(-15.f * delta_t), glm::vec3(1.0f, -0.35f, 0.0f));
-
-
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        current_shader->use();
+        for(auto model : models)
+        {
+            ShaderProgram* current_shader = model->get_shader();
+            current_shader->use();
+            int texture_uniform_location = glGetUniformLocation(current_shader->get_id(), "current_texture");
+            glUniform1i(texture_uniform_location, 0);
 
-        int model_location = glGetUniformLocation(current_shader->get_id(), "model");
-        glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model));
+            int view_location = glGetUniformLocation(current_shader->get_id(), "view");
+            glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view));
 
-        int view_location = glGetUniformLocation(current_shader->get_id(), "view");
-        glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view));
+            int projection_location = glGetUniformLocation(current_shader->get_id(), "projection");
+            glUniformMatrix4fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
 
-        int projection_location = glGetUniformLocation(current_shader->get_id(), "projection");
-        glUniformMatrix4fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
+            int light_pos_location = glGetUniformLocation(current_shader->get_id(), "light_position");
+            glUniform3fv(light_pos_location, 1, &light_pos[0]);
 
-        int light_pos_location = glGetUniformLocation(current_shader->get_id(), "light_position");
-        glUniform3fv(light_pos_location, 1, &light_pos[0]);
+            int view_pos_location = glGetUniformLocation(current_shader->get_id(), "view_position");
+            glUniform3fv(view_pos_location, 1, &camera_position[0]);
 
-
-        glActiveTexture(GL_TEXTURE0);
-        tex_checkerboard.use();
-        current_shader->use();
-        current_model->render();
+            glActiveTexture(GL_TEXTURE0);
+            tex_checkerboard.use();
+            model->render();
+        }
 
         uint32_t current_time_ms = SDL_GetTicks();
         delta = current_time_ms -  last_time_ms;
