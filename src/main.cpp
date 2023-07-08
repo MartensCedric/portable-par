@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     Model* target_model = new Model("assets/mesh/test.obj");
     Model* light_model = new Model("assets/mesh/cube.obj");
 
-    std::vector<Model*> models = {target_model, light_model};
+    std::vector<Model*> models = {light_model}; // {target_model, light_model};
 
     Shader* v_passthrough = new Shader("assets/shaders/passthrough.vs", shader_type::vertex);
     Shader* f_passthrough = new Shader("assets/shaders/passthrough.fs", shader_type::fragment);
@@ -86,7 +86,14 @@ int main(int argc, char** argv)
 
     Texture tex_checkerboard;
     tex_checkerboard.load("assets/sprites/checkerboard.png");
-    tex_checkerboard.use();
+
+    Texture white_texture;
+    white_texture.load("assets/sprites/white.png");
+
+    target_model->set_texture(&tex_checkerboard);
+    light_model->set_texture(&white_texture);
+
+    light_model->model = glm::scale(light_model->model, glm::vec3(0.2, 0.2, 0.2));
 
     bool is_running = true;
     bool wireframe_mode = false;
@@ -166,8 +173,6 @@ int main(int argc, char** argv)
             int view_pos_location = glGetUniformLocation(current_shader->get_id(), "view_position");
             glUniform3fv(view_pos_location, 1, &camera_position[0]);
 
-            glActiveTexture(GL_TEXTURE0);
-            tex_checkerboard.use();
             model->render();
         }
 

@@ -18,11 +18,15 @@ public:
     void render(ShaderProgram* shader_program);
     void render();
     void set_shader(ShaderProgram* shader_program);
+    void set_texture(Texture* texture);
     ShaderProgram* get_shader() const;
+
+    glm::mat4 model;
 private:
     std::vector<Mesh> meshes;
-    glm::mat4 model;
+
     ShaderProgram* shader_program = nullptr;
+    Texture* texture = nullptr;
     void process_mesh(aiMesh* mesh, const aiScene* scene);
 
 };

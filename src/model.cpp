@@ -62,7 +62,8 @@ void Model::render(ShaderProgram* shader) {
 
     int model_location = glGetUniformLocation(shader->get_id(), "model");
     glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model));
-
+    glActiveTexture(GL_TEXTURE0);
+    texture->use();
     for(auto& m : meshes)
         m.render(shader);
 }
@@ -80,4 +81,9 @@ void Model::set_shader(ShaderProgram* shader)
 
 ShaderProgram *Model::get_shader() const {
     return shader_program;
+}
+
+void Model::set_texture(Texture* texture)
+{
+    this->texture = texture;
 }
