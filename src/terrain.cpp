@@ -23,7 +23,7 @@ Terrain::Terrain(const char* height_file, const char* gradient_file)
 
 bool Terrain::load_height(const char *height_file) {
 
-    stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(false);
     int width, height, channels;
     uint8_t* data = stbi_load(height_file, &width, &height, &channels, 0);
     if(!data) return false;
@@ -33,9 +33,9 @@ bool Terrain::load_height(const char *height_file) {
         std::vector<float> one_row;
         for(int col = 0; col < width; col++)
         {
-            uint8_t value = data[(row * width + col) * 4];
+            uint8_t value = data[(row * width + col)];
             float normalized = static_cast<float>(value) / 255.0f;
-            one_row.push_back(normalized);
+            one_row.push_back(normalized - 0.5f);
         }
         heights.push_back(one_row);
     }
@@ -44,7 +44,7 @@ bool Terrain::load_height(const char *height_file) {
 }
 
 bool Terrain::load_gradient(const char *gradient_file) {
-    stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(false);
     int width, height, channels;
     uint8_t* data = stbi_load(gradient_file, &width, &height, &channels, 0);
     if(!data) return false;

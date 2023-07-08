@@ -87,7 +87,7 @@ int main(int argc, char** argv)
     delete f_passthrough;
     delete f_phong;
 
-    Terrain terrain("assets/map/height.png", "assets/map/gradient.png");
+    Terrain terrain("assets/map/gray.png", "assets/map/gradient.png");
     Texture tex_checkerboard;
     tex_checkerboard.load("assets/sprites/checkerboard.png");
 
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
     ball_model->model = glm::scale(ball_model->model, glm::vec3(0.5, 0.5, 0.5));
 
     map_model->model = glm::scale(map_model->model, 10.0f * glm::vec3(1.0, 1.0, 1.0));
-    map_model->model = glm::translate(map_model->model, glm::vec3(0.0, -1.0, 0.0));
+//    map_model->model = glm::translate(map_model->model, glm::vec3(0.0, -1.0, 0.0));
 
     bool is_running = true;
     bool wireframe_mode = false;
@@ -175,9 +175,11 @@ int main(int argc, char** argv)
 //        ball_model->model = glm::rotate(ball_model->model, glm::radians(15.f * delta_t), glm::vec3(1.0, 1.0, 1.0));
         ball_model->model = glm::mat4(1);
 
-        ball_model->model = glm::translate(ball_model->model, 5.f * glm::vec3(glm::sin(3.f * accumulator_f), -1.5, glm::cos(3.f * accumulator_f)));
+        float ball_x = 8.f * glm::sin(2.f * accumulator_f);
+        float ball_z = 8.f * glm::cos(2.f * accumulator_f);
+        ball_model->model = glm::translate(ball_model->model, -0.75f + glm::vec3( ball_x, terrain.get_height(ball_x, ball_z) * 10.f,  ball_z));
         ball_model->model = glm::scale(ball_model->model, glm::vec3(0.2f, 0.2f, 0.2f));
-        camera_target = glm::vec3(0.0f, -10.0f, 0.0f);
+        camera_target = glm::vec3(0.0f, 0.0f, 0.0f);
         camera_direction = glm::normalize(camera_position - camera_target);
 
         up = glm::vec3(0.0f, 1.0f, 0.0f);

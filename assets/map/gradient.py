@@ -5,7 +5,10 @@ import skimage.exposure as exposure
 img = cv2.imread('height.png',  cv2.IMREAD_UNCHANGED)
 
 gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-cv2.imwrite('gray.png', img)
+print(gray.astype(float))
+gray = (gray.astype(float)**(0.92698467586)).astype(np.uint8)
+print(gray)
+cv2.imwrite('gray.png', gray)
 blur = cv2.GaussianBlur(gray, (7,7), 1.3, 1.3)
 dx = cv2.Sobel(blur, cv2.CV_64F, 1, 0, ksize=3)
 dy = cv2.Sobel(blur, cv2.CV_64F, 0, 1, ksize=3)
@@ -13,7 +16,6 @@ dy = cv2.Sobel(blur, cv2.CV_64F, 0, 1, ksize=3)
 orientation = cv2.phase(dx, dy, False)
 orientation_encoded = np.floor(255 * orientation / (2 * np.pi))
 
-print(dx)
 dx = cv2.convertScaleAbs(np.abs(dx)) / 255
 dy = cv2.convertScaleAbs(np.abs(dy)) / 255
 
