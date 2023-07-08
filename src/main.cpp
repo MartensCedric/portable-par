@@ -11,6 +11,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "shader_program.h"
 #include "model.h"
+#include "terrain.h"
 
 
 int main(int argc, char** argv)
@@ -61,11 +62,11 @@ int main(int argc, char** argv)
 
     glm::vec3 light_pos = glm::vec3(5.0, 10.0, 2.0);
 
-    Model* target_model = new Model("assets/mesh/ball.obj");
+    Model* ball_model = new Model("assets/mesh/ball.obj");
     Model* light_model = new Model("assets/mesh/cube.obj");
     Model* map_model = new Model("assets/mesh/map1.obj");
 
-    std::vector<Model*> models = {target_model, map_model};
+    std::vector<Model*> models = {ball_model, map_model};
 
     Shader* v_passthrough = new Shader("assets/shaders/passthrough.vs", shader_type::vertex);
     Shader* f_passthrough = new Shader("assets/shaders/passthrough.fs", shader_type::fragment);
@@ -78,7 +79,7 @@ int main(int argc, char** argv)
     ShaderProgram* phong_shader = new ShaderProgram(v_passthrough, f_phong);
     ShaderProgram* texture_shader = new ShaderProgram(v_passthrough, f_passthrough);
 
-    target_model->set_shader(phong_shader);
+    ball_model->set_shader(phong_shader);
 //    light_model->set_shader(texture_shader);
     map_model->set_shader(phong_shader);
 
@@ -86,6 +87,7 @@ int main(int argc, char** argv)
     delete f_passthrough;
     delete f_phong;
 
+    Terrain terrain("assets/map/height.png", "assets/map/gradient.png");
     Texture tex_checkerboard;
     tex_checkerboard.load("assets/sprites/checkerboard.png");
 
@@ -95,19 +97,19 @@ int main(int argc, char** argv)
     Texture green_texture;
     green_texture.load("assets/sprites/green.png");
 
-    target_model->set_texture(&white_texture);
+    ball_model->set_texture(&white_texture);
 //    light_model->set_texture(&white_texture);
     map_model->set_texture(&green_texture);
 
-    target_model->model = glm::mat4(1);
-    target_model->model = glm::scale(target_model->model, glm::vec3(0.5, 0.5, 0.5));
+    ball_model->model = glm::mat4(1);
+    ball_model->model = glm::scale(ball_model->model, glm::vec3(0.5, 0.5, 0.5));
 
     map_model->model = glm::scale(map_model->model, 10.0f * glm::vec3(1.0, 1.0, 1.0));
     map_model->model = glm::translate(map_model->model, glm::vec3(0.0, -1.0, 0.0));
 
     bool is_running = true;
     bool wireframe_mode = false;
-    bool cull_faces = false;
+    bool cull_faces = true;
 
     glClearColor(77.f / 255.f, 166.f/255.f, 166.f/225.f, 1.0f);
     glEnable(GL_BLEND);
@@ -142,6 +144,12 @@ int main(int argc, char** argv)
                             cull_faces = !cull_faces;
                             std::cout << "cull face mode: " << cull_faces << std::endl;
                             break;
+                        case SDL_KeyCode::SDLK_w:
+                            camera_position += glm::vec3(0, 1, 0);
+                            break;
+                        case SDL_KeyCode::SDLK_s:
+                            camera_position += glm::vec3(0, -1, 0);
+                            break;
                     }
             }
             
@@ -164,8 +172,11 @@ int main(int argc, char** argv)
 
         light_pos = camera_position  + glm::vec3(0.0, 0.0, 10.0f);
 
-        target_model->model = glm::rotate(target_model->model, glm::radians(15.f* delta_t), glm::vec3(1.0, 1.0, 1.0));
+//        ball_model->model = glm::rotate(ball_model->model, glm::radians(15.f * delta_t), glm::vec3(1.0, 1.0, 1.0));
+        ball_model->model = glm::mat4(1);
 
+        ball_model->model = glm::translate(ball_model->model, 5.f * glm::vec3(glm::sin(3.f * accumulator_f), -1.5, glm::cos(3.f * accumulator_f)));
+        ball_model->model = glm::scale(ball_model->model, glm::vec3(0.2f, 0.2f, 0.2f));
         camera_target = glm::vec3(0.0f, -10.0f, 0.0f);
         camera_direction = glm::normalize(camera_position - camera_target);
 

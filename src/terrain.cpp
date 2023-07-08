@@ -3,9 +3,9 @@
 //
 
 #include "terrain.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb/stb_image.h>
+
 #include <iostream>
+#include <stb/stb_image.h>
 
 Terrain::Terrain(const char* height_file, const char* gradient_file)
 {
@@ -65,6 +65,8 @@ bool Terrain::load_gradient(const char *gradient_file) {
         }
         gradients.push_back(one_row);
     }
+
+    return true;
 }
 
 glm::vec3 Terrain::get_gradient(float x, float z)
