@@ -45,7 +45,7 @@ int main(int argc, char** argv)
 
     glViewport(0, 0, 1280, 720);
 
-    glm::vec3 camera_position = glm::vec3(0.0f, 0.0f, 5.0f);
+    glm::vec3 camera_position = glm::vec3(0.0f, 0.0f, 8.0f);
     glm::vec3 camera_target = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 camera_direction = glm::normalize(camera_position - camera_target);
 
@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     Model* target_model = new Model("assets/mesh/test.obj");
     Model* light_model = new Model("assets/mesh/cube.obj");
 
-    std::vector<Model*> models = {light_model}; // {target_model, light_model};
+    std::vector<Model*> models = {target_model, light_model};
 
     Shader* v_passthrough = new Shader("assets/shaders/passthrough.vs", shader_type::vertex);
     Shader* f_passthrough = new Shader("assets/shaders/passthrough.fs", shader_type::fragment);
@@ -93,8 +93,8 @@ int main(int argc, char** argv)
     target_model->set_texture(&tex_checkerboard);
     light_model->set_texture(&white_texture);
 
-    light_model->model = glm::scale(light_model->model, glm::vec3(0.2, 0.2, 0.2));
-
+    target_model->model = glm::mat4(1);
+    target_model->model = glm::scale(target_model->model, glm::vec3(0.5, 0.5, 0.5));
     bool is_running = true;
     bool wireframe_mode = false;
     bool cull_faces = false;
@@ -108,6 +108,7 @@ int main(int argc, char** argv)
     uint32_t last_time_ms = SDL_GetTicks();
     uint32_t ms_per_tick = 16;
     uint64_t accumulator = 0;
+    float accumulator_f = 0.0f;
     uint32_t delta = 16;
     float delta_t = static_cast<float>(delta) / 1000.f;
     while(is_running)
@@ -151,6 +152,13 @@ int main(int argc, char** argv)
             glDisable(GL_CULL_FACE);
         }
 
+        light_pos = glm::vec3(2.0f * cos(accumulator_f), -0.2f, 2.0f * sin(accumulator_f));
+        light_model->model = glm::mat4(1);
+        light_model->model = glm::translate(light_model->model, light_pos);
+        light_model->model = glm::scale(light_model->model, glm::vec3(0.1, 0.1, 0.1));
+
+
+        target_model->model = glm::rotate(target_model->model, glm::radians(15.f* delta_t), glm::vec3(1.0, 1.0, 1.0));
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -180,6 +188,7 @@ int main(int argc, char** argv)
         delta = current_time_ms -  last_time_ms;
         delta_t = static_cast<float>(delta) / 1000.f;
         accumulator += delta;
+        accumulator_f += delta_t;
         last_time_ms = current_time_ms;
 
         if(delta < ms_per_tick)
