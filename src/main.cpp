@@ -45,7 +45,7 @@ int main(int argc, char** argv)
 
     glViewport(0, 0, 1280, 720);
 
-    glm::vec3 camera_position = glm::vec3(0.0f, 0.0f, 8.0f);
+    glm::vec3 camera_position = glm::vec3(0.0f, 10.0f, 20.0f);
     glm::vec3 camera_target = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 camera_direction = glm::normalize(camera_position - camera_target);
 
@@ -61,10 +61,11 @@ int main(int argc, char** argv)
 
     glm::vec3 light_pos = glm::vec3(5.0, 10.0, 2.0);
 
-    Model* target_model = new Model("assets/mesh/test.obj");
+    Model* target_model = new Model("assets/mesh/ball.obj");
     Model* light_model = new Model("assets/mesh/cube.obj");
+    Model* map_model = new Model("assets/mesh/map1.obj");
 
-    std::vector<Model*> models = {target_model, light_model};
+    std::vector<Model*> models = {target_model, map_model};
 
     Shader* v_passthrough = new Shader("assets/shaders/passthrough.vs", shader_type::vertex);
     Shader* f_passthrough = new Shader("assets/shaders/passthrough.fs", shader_type::fragment);
@@ -78,7 +79,8 @@ int main(int argc, char** argv)
     ShaderProgram* texture_shader = new ShaderProgram(v_passthrough, f_passthrough);
 
     target_model->set_shader(phong_shader);
-    light_model->set_shader(texture_shader);
+//    light_model->set_shader(texture_shader);
+    map_model->set_shader(phong_shader);
 
     delete v_passthrough;
     delete f_passthrough;
@@ -90,16 +92,24 @@ int main(int argc, char** argv)
     Texture white_texture;
     white_texture.load("assets/sprites/white.png");
 
-    target_model->set_texture(&tex_checkerboard);
-    light_model->set_texture(&white_texture);
+    Texture green_texture;
+    green_texture.load("assets/sprites/green.png");
+
+    target_model->set_texture(&white_texture);
+//    light_model->set_texture(&white_texture);
+    map_model->set_texture(&green_texture);
 
     target_model->model = glm::mat4(1);
     target_model->model = glm::scale(target_model->model, glm::vec3(0.5, 0.5, 0.5));
+
+    map_model->model = glm::scale(map_model->model, 10.0f * glm::vec3(1.0, 1.0, 1.0));
+    map_model->model = glm::translate(map_model->model, glm::vec3(0.0, -1.0, 0.0));
+
     bool is_running = true;
     bool wireframe_mode = false;
     bool cull_faces = false;
 
-    glClearColor(0, 0, 0, 1.0f);
+    glClearColor(77.f / 255.f, 166.f/255.f, 166.f/225.f, 1.0f);
     glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -152,14 +162,17 @@ int main(int argc, char** argv)
             glDisable(GL_CULL_FACE);
         }
 
-        light_pos = glm::vec3(2.0f * cos(accumulator_f), -0.2f, 2.0f * sin(accumulator_f));
-        light_model->model = glm::mat4(1);
-        light_model->model = glm::translate(light_model->model, light_pos);
-        light_model->model = glm::scale(light_model->model, glm::vec3(0.1, 0.1, 0.1));
-
+        light_pos = camera_position  + glm::vec3(0.0, 0.0, 10.0f);
 
         target_model->model = glm::rotate(target_model->model, glm::radians(15.f* delta_t), glm::vec3(1.0, 1.0, 1.0));
 
+        camera_target = glm::vec3(0.0f, 0.0f, 0.0f);
+        camera_direction = glm::normalize(camera_position - camera_target);
+
+        up = glm::vec3(0.0f, 1.0f, 0.0f);
+        camera_right = glm::normalize(glm::cross(up, camera_direction));
+
+        camera_up = glm::normalize(glm::cross(camera_direction, camera_right));
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         for(auto model : models)
