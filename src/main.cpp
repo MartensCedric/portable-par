@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 
     glm::vec3 light_pos = glm::vec3(5.0, 10.0, 2.0);
     glm::vec3 ball_pos = glm::vec3(3.0, 0.0, 0.0);
-    glm::vec3 ball_velocity = glm::vec3(-6.0, 0.0, 8.0);
+    glm::vec3 ball_velocity = glm::vec3(0.0f, 0.0f, 0.0f); // glm::vec3(-6.0, 0.0, 8.0);
 
     Model* ball_model = new Model("assets/mesh/ball.obj");
     Model* light_model = new Model("assets/mesh/cube.obj");
@@ -80,12 +80,19 @@ int main(int argc, char** argv)
     Shader* f_passthrough = new Shader("assets/shaders/passthrough.fs", shader_type::fragment);
     Shader* f_phong = new Shader("assets/shaders/phong.fs", shader_type::fragment);
 
+    Shader* dots_v_passthrough = new Shader("assets/shaders/dots.vs", shader_type::vertex);
+    Shader* dots_f_passthrough = new Shader("assets/shaders/dots.fs", shader_type::fragment);
+
     if(!v_passthrough->compile()) return -1;
     if(!f_passthrough->compile()) return -1;
     if(!f_phong->compile()) return -1;
+    if(!dots_v_passthrough->compile()) return -1;
+    if(!dots_f_passthrough->compile()) return -1;
 
     ShaderProgram* phong_shader = new ShaderProgram(v_passthrough, f_phong);
     ShaderProgram* texture_shader = new ShaderProgram(v_passthrough, f_passthrough);
+    ShaderProgram* dots_shader = new ShaderProgram(dots_v_passthrough, dots_f_passthrough);
+
 
     ball_model->set_shader(phong_shader);
 //    light_model->set_shader(texture_shader);
@@ -94,6 +101,8 @@ int main(int argc, char** argv)
     delete v_passthrough;
     delete f_passthrough;
     delete f_phong;
+    delete dots_f_passthrough;
+    delete dots_v_passthrough;
 
     Terrain terrain("assets/map/gray.png", "assets/map/gradient.png");
     Texture tex_checkerboard;
@@ -129,6 +138,30 @@ int main(int argc, char** argv)
     float accumulator_f = 0.0f;
     uint32_t delta = 16;
     float delta_t = static_cast<float>(delta) / 1000.f;
+
+
+    bool render_points = true;
+    std::vector<float> points = {
+            0.0f, 3.0f, 0.0f,
+            0.0f, 0.25f, 0.0f,
+            0.0f, 0.5f, 0.0f,
+            0.0f, 0.75f, 0.0f,
+            0.0f, 1.0f, 0.0f,
+    };
+
+    uint32_t points_vao;
+    glGenVertexArrays(1, &points_vao);
+    glBindVertexArray(points_vao);
+
+    uint32_t points_vbo;
+    glGenBuffers(1, &points_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
+    glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(float) * points.size(), points.data(), GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), nullptr);
+    glEnableVertexAttribArray(0);
+
+
+    glPointSize(5.f);
     while(is_running)
     {
         SDL_Event e;
@@ -230,6 +263,19 @@ int main(int argc, char** argv)
             glUniform3fv(view_pos_location, 1, &camera_position[0]);
 
             model->render();
+        }
+
+        if(render_points)
+        {
+            dots_shader->use();
+            int view_location = glGetUniformLocation(dots_shader->get_id(), "view");
+            glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view));
+
+            int projection_location = glGetUniformLocation(dots_shader->get_id(), "projection");
+            glUniformMatrix4fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
+            glBindVertexArray(points_vao);
+            glDrawArrays(GL_POINTS, 0, points.size() / 3);
+            glBindVertexArray(0);
         }
 
         uint32_t current_time_ms = SDL_GetTicks();
