@@ -54,11 +54,11 @@ bool Terrain::load_gradient(const char *gradient_file) {
         std::vector<glm::vec3> one_row;
         for(int col = 0; col < width; col++)
         {
-            uint8_t* value = &data[(row * width + col)];
+            uint8_t* value = &data[(row * width + col) * 3];
             uint8_t green = value[1];
             uint8_t blue = value[2];
 
-            float orientation = 2.0f * M_PI * static_cast<float>(green) / 255.0f;
+            float orientation = 2.0f * M_PI * static_cast<float>(green) / 255.0f + M_PI;
             float magnitude = static_cast<float>(blue) / 255.f;
             glm::vec3 vec = glm::vec3(glm::cos(orientation), 0.f, glm::sin(orientation)) * magnitude;
             one_row.push_back(vec);

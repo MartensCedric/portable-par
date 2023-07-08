@@ -13,6 +13,12 @@
 #include "model.h"
 #include "terrain.h"
 
+float apply_friction(float value, float friction)
+{
+    if(value < 0)
+        return std::min(0.0f, value + friction);
+    return std::max(0.0f, value - friction);
+}
 
 int main(int argc, char** argv)
 {
@@ -61,6 +67,8 @@ int main(int argc, char** argv)
     view = glm::lookAt(camera_position,camera_target, camera_up);
 
     glm::vec3 light_pos = glm::vec3(5.0, 10.0, 2.0);
+    glm::vec3 ball_pos = glm::vec3(3.0, 0.0, 0.0);
+    glm::vec3 ball_velocity = glm::vec3(-6.0, 0.0, 8.0);
 
     Model* ball_model = new Model("assets/mesh/ball.obj");
     Model* light_model = new Model("assets/mesh/cube.obj");
@@ -98,14 +106,12 @@ int main(int argc, char** argv)
     green_texture.load("assets/sprites/green.png");
 
     ball_model->set_texture(&white_texture);
-//    light_model->set_texture(&white_texture);
     map_model->set_texture(&green_texture);
 
     ball_model->model = glm::mat4(1);
     ball_model->model = glm::scale(ball_model->model, glm::vec3(0.5, 0.5, 0.5));
 
     map_model->model = glm::scale(map_model->model, 10.0f * glm::vec3(1.0, 1.0, 1.0));
-//    map_model->model = glm::translate(map_model->model, glm::vec3(0.0, -1.0, 0.0));
 
     bool is_running = true;
     bool wireframe_mode = false;
@@ -172,11 +178,26 @@ int main(int argc, char** argv)
 
         light_pos = camera_position  + glm::vec3(0.0, 0.0, 10.0f);
 
-//        ball_model->model = glm::rotate(ball_model->model, glm::radians(15.f * delta_t), glm::vec3(1.0, 1.0, 1.0));
         ball_model->model = glm::mat4(1);
 
-        float ball_x = 8.f * glm::sin(2.f * accumulator_f);
-        float ball_z = 8.f * glm::cos(2.f * accumulator_f);
+        float ball_friction = 0.05f;
+        ball_velocity.x = apply_friction(ball_velocity.x, ball_friction);
+        ball_velocity.z = apply_friction(ball_velocity.z, ball_friction);
+
+        glm::vec3 gradient = terrain.get_gradient(ball_pos.x, ball_pos.z);
+        ball_velocity += gradient;
+
+        if(glm::length(ball_velocity) < 0.005f)
+        {
+            ball_velocity = glm::vec3(0, 0, 0);
+        }
+//        std::cout << "gradient: " << gradient[0] << " " << gradient[2] << std::endl;
+//        std::cout << "vel: " << ball_velocity[0] << " " << ball_velocity[2] << std::endl;
+//        std::cout << "pos: " << ball_pos[0] << " " << ball_pos[2] << std::endl;
+        ball_pos += ball_velocity * delta_t;
+
+        float ball_x = ball_pos.x;
+        float ball_z = ball_pos.z;
         ball_model->model = glm::translate(ball_model->model, -0.75f + glm::vec3( ball_x, terrain.get_height(ball_x, ball_z) * 10.f,  ball_z));
         ball_model->model = glm::scale(ball_model->model, glm::vec3(0.2f, 0.2f, 0.2f));
         camera_target = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -223,7 +244,6 @@ int main(int argc, char** argv)
 
         SDL_GL_SwapWindow(window);
     }
-
 
     SDL_GL_DeleteContext(main_context);
     SDL_DestroyWindow(window);
