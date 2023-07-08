@@ -166,13 +166,14 @@ int main(int argc, char** argv)
 
         target_model->model = glm::rotate(target_model->model, glm::radians(15.f* delta_t), glm::vec3(1.0, 1.0, 1.0));
 
-        camera_target = glm::vec3(0.0f, 0.0f, 0.0f);
+        camera_target = glm::vec3(0.0f, -10.0f, 0.0f);
         camera_direction = glm::normalize(camera_position - camera_target);
 
         up = glm::vec3(0.0f, 1.0f, 0.0f);
         camera_right = glm::normalize(glm::cross(up, camera_direction));
 
         camera_up = glm::normalize(glm::cross(camera_direction, camera_right));
+        view = glm::lookAt(camera_position,camera_target, camera_up);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         for(auto model : models)
