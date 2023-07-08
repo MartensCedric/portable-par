@@ -69,6 +69,7 @@ int main(int argc, char** argv)
     glm::vec3 light_pos = glm::vec3(5.0, 10.0, 2.0);
     glm::vec3 ball_pos = glm::vec3(3.0, 0.0, 0.0);
     glm::vec3 ball_velocity = glm::vec3(0.0f, 0.0f, 0.0f); // glm::vec3(-6.0, 0.0, 8.0);
+    glm::vec3 target_velocity = glm::vec3(-6.0, 0.0, 8.0);
 
     Model* ball_model = new Model("assets/mesh/ball.obj");
     Model* light_model = new Model("assets/mesh/cube.obj");
@@ -267,6 +268,41 @@ int main(int argc, char** argv)
 
         if(render_points)
         {
+
+            // simulate 30 frames
+            glm::vec3 points_velocity = target_velocity;
+            glm::vec3 points_pos = ball_pos;
+
+            for(int i = 1; i <= 30; i++)
+            {
+                points_velocity.x = apply_friction(points_velocity.x, ball_friction);
+                points_velocity.z = apply_friction(points_velocity.z, ball_friction);
+
+                glm::vec3 gradient = terrain.get_gradient(points_pos.x, points_pos.z);
+                points_velocity += gradient;
+
+                if(glm::length(points_velocity) < 0.005f)
+                {
+                    points_velocity = glm::vec3(0, 0, 0);
+                }
+
+                points_pos += points_velocity * 0.016f;
+
+                if(i % 6 == 0)
+                {
+                    int offset = 3*((i/6) - 1);
+
+                    points[offset] = points_pos[0];
+                    points[offset + 1] = -0.75f + terrain.get_height(points_pos[0], points_pos[2]) * 10.f;
+                    points[offset + 2] =  points_pos[2];
+                }
+            }
+
+            glBindVertexArray(points_vao);
+            glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
+            glBufferSubData(GL_ARRAY_BUFFER,0, points.size() * sizeof(float), points.data());
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+
             dots_shader->use();
             int view_location = glGetUniformLocation(dots_shader->get_id(), "view");
             glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view));
