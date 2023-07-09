@@ -28,7 +28,12 @@ glm::vec2 get_random_velocity(float scale)
     std::uniform_real_distribution<float> x_dist(-scale, scale);
     std::uniform_real_distribution<float> z_dist(-scale, scale);
 
-    return {x_dist(gen), z_dist(gen)};
+    std::uniform_real_distribution<float> magnitude(scale/2, scale);
+    glm::vec2 vec = {x_dist(gen), z_dist(gen)};
+    vec /= glm::length(vec);
+    vec *= magnitude(gen);
+
+    return vec;
 }
 
 glm::vec3 move_hole(glm::vec3 hole, glm::vec2 xz,Terrain& terrain)
@@ -52,6 +57,10 @@ int main(int argc, char** argv)
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
+
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
     SDL_Window* window = SDL_CreateWindow("notcodegolf - GMTK2023", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if(!window)
@@ -95,7 +104,7 @@ int main(int argc, char** argv)
     glm::vec3 ball_pos = glm::vec3(3.0, 0.0, 0.0);
     glm::vec3 hole_pos = glm::vec3(0, 0, 0);
     glm::vec3 ball_velocity = glm::vec3(0, 0.0, 0.0);
-    glm::vec2 random_vel = get_random_velocity(6.0f);
+    glm::vec2 random_vel = get_random_velocity(7.0f);
     glm::vec3 target_velocity = glm::vec3(random_vel.x, 0.0f, random_vel.y);
 
     Model* ball_model = new Model("assets/mesh/ball.obj");
@@ -184,6 +193,8 @@ int main(int argc, char** argv)
     glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_MULTISAMPLE);
+
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     uint32_t last_time_ms = SDL_GetTicks();
@@ -227,8 +238,8 @@ int main(int argc, char** argv)
                  nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D,  GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D,  GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,  GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,  GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D,  GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_map, 0);
@@ -340,22 +351,13 @@ int main(int argc, char** argv)
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        if(cull_faces)
-        {
-            glEnable(GL_CULL_FACE);
-        }
-        else
-        {
-            glDisable(GL_CULL_FACE);
-        }
-
         light_model->model = glm::mat4(1.f);
         light_model->model = glm::translate(light_model->model, light_pos);
         light_model->model = glm::scale(light_model->model, glm::vec3(0.2f, 0.2f, 0.2f));
 
         ball_model->model = glm::mat4(1);
 
-        float ball_friction = 0.05f;
+        float ball_friction = 0.04f;
         ball_velocity.x = apply_friction(ball_velocity.x, ball_friction);
         ball_velocity.z = apply_friction(ball_velocity.z, ball_friction);
 
@@ -373,8 +375,16 @@ int main(int argc, char** argv)
 //        std::cout << "pos: " << ball_pos[0] << " " << ball_pos[2] << std::endl;
         ball_pos += ball_velocity * delta_t;
 
+
+        if(ball_pos.x  < -10.0f || ball_pos.x > 10.f)
+            ball_pos.x = 0.0f;
+
+        if(ball_pos.z  < -10.0f || ball_pos.z > 10.f)
+            ball_pos.z = 0.0f;
+
         float ball_x = ball_pos.x;
         float ball_z = ball_pos.z;
+
         ball_model->model = glm::translate(ball_model->model, glm::vec3( ball_x, -1.f + terrain.get_height(ball_x, ball_z) * 10.f,  ball_z));
         ball_model->model = glm::scale(ball_model->model, glm::vec3(0.2f, 0.2f, 0.2f));
 
@@ -382,6 +392,7 @@ int main(int argc, char** argv)
         hole_pos.y = -1.f + terrain.get_height(hole_pos.x, hole_pos.z) * 10.f;
         hole_model->model = glm::translate(hole_model->model, hole_pos);
         hole_model->model = glm::scale(hole_model->model, glm::vec3(0.2f, 0.2f, 0.2f));
+
 
         flag_top_model->model = glm::mat4(1);
 
@@ -416,6 +427,17 @@ int main(int argc, char** argv)
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+
+        if(cull_faces)
+        {
+            glEnable(GL_CULL_FACE);
+        }
+        else
+        {
+            glDisable(GL_CULL_FACE);
+        }
+
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         if(render_shadow_map)
         {
@@ -428,6 +450,7 @@ int main(int argc, char** argv)
         }
         else
         {
+
             glViewport(0, 0, 1280, 720);
 
             for(auto model : models)
@@ -483,6 +506,12 @@ int main(int argc, char** argv)
                         }
 
                         points_pos += points_velocity * 0.016f;
+
+                        if(points_pos.x  < -10.0f || points_pos.x > 10.f)
+                            points_pos.x = 0.0f;
+
+                        if(points_pos.z  < -10.0f || points_pos.z > 10.f)
+                            points_pos.z = 0.0f;
 
                         if(i % 6 == 0)
                         {
