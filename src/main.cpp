@@ -193,6 +193,26 @@ int main(int argc, char** argv)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), nullptr);
     glEnableVertexAttribArray(0);
 
+    uint32_t depth_map_fbo;
+    glGenFramebuffers(1, &depth_map_fbo);
+
+    const uint32_t shadow_width = 1024, shadow_height = 1024;
+    uint32_t depth_map;
+    glGenTextures(1, &depth_map);
+    glBindTexture(GL_TEXTURE_2D, depth_map);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadow_width, shadow_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT,
+                 nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,  GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,  GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,  GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_map, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     double camera_around_angle = 0.0;
 
     glPointSize(5.f);
@@ -286,7 +306,6 @@ int main(int argc, char** argv)
             ball_velocity = glm::vec3(0, 0, 0);
             render_points = true;
             ball_launched = false;
-            std::cout << "stopped" << std::endl;
         }
 //        std::cout << "gradient: " << gradient[0] << " " << gradient[2] << std::endl;
 //        std::cout << "vel: " << ball_velocity[0] << " " << ball_velocity[2] << std::endl;
@@ -319,6 +338,9 @@ int main(int argc, char** argv)
 
         camera_up = glm::normalize(glm::cross(camera_direction, camera_right));
         view = glm::lookAt(camera_position,camera_target, camera_up);
+
+
+        glViewport(0, 0, 1280, 720);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         for(auto model : models)
