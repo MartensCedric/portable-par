@@ -1,0 +1,199 @@
+{
+	"inputs" : 
+	[
+		{
+			"path" : "CMakeLists.txt"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/CMakeFiles/3.24.2/CMakeSystem.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/CMakeSystemSpecificInitialize.cmake"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/CMakeFiles/3.24.2/CMakeCCompiler.cmake"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/CMakeFiles/3.24.2/CMakeCXXCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/CMakeSystemSpecificInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/CMakeGenericSystem.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/CMakeInitializeConfigs.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/Platform/Linux.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/Platform/UnixPaths.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/CMakeCInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/CMakeLanguageInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/Compiler/GNU-C.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/Compiler/GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/Platform/Linux-GNU-C.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/Platform/Linux-GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/CMakeCommonLanguageInclude.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/CMakeCXXInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/CMakeLanguageInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/Compiler/GNU-CXX.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/Compiler/GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/Platform/Linux-GNU-CXX.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/Platform/Linux-GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/CMakeCommonLanguageInclude.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/FindOpenGL.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/FindPackageHandleStandardArgs.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/FindPackageMessage.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/FindGLEW.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/FindPackageHandleStandardArgs.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/FindPackageMessage.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/cedric/Documents/Software/clion-2022.3.1/bin/cmake/linux/share/cmake-3.24/Modules/SelectLibraryConfigurations.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/usr/lib64/cmake/glm/glmConfigVersion.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/usr/lib64/cmake/glm/glmConfig.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/usr/lib64/cmake/glm/glmTargets.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/usr/lib64/cmake/assimp-5.2/assimpConfigVersion.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/usr/lib64/cmake/assimp-5.2/assimpConfig.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/usr/lib64/cmake/assimp-5.2/assimpTargets.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/usr/lib64/cmake/assimp-5.2/assimpTargets-release.cmake"
+		}
+	],
+	"kind" : "cmakeFiles",
+	"paths" : 
+	{
+		"build" : "/home/cedric/Documents/Programming/gmtk-2023/cmake-build-debug",
+		"source" : "/home/cedric/Documents/Programming/gmtk-2023"
+	},
+	"version" : 
+	{
+		"major" : 1,
+		"minor" : 0
+	}
+}

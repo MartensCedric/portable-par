@@ -1,0 +1,1 @@
+awk 'NF == 4 { system("echo cp " $3 " destdir") }' infile

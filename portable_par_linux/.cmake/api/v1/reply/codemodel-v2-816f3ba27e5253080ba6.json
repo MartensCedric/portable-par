@@ -1,0 +1,69 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.17"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "gmtk-2023",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "copy_assets::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-copy_assets-Debug-74a19ab4c7ae91f10803.json",
+					"name" : "copy_assets",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "gmtk-2023::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-gmtk-2023-Debug-cfa2e2716c99018d6ee0.json",
+					"name" : "gmtk-2023",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/cedric/Documents/Programming/gmtk-2023/cmake-build-debug",
+		"source" : "/home/cedric/Documents/Programming/gmtk-2023"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 4
+	}
+}

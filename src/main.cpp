@@ -71,7 +71,7 @@ int main(int argc, char** argv)
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
-    SDL_Window* window = SDL_CreateWindow("notcodegolf - GMTK2023", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    SDL_Window* window = SDL_CreateWindow("Portable Par - GMTK2023", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if(!window)
     {
         std::cerr << "Failed to initialize window" << std::endl;

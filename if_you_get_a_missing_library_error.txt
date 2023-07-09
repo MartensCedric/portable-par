@@ -1,0 +1,11 @@
+You might get an error in the form of:
+
+./gmtk-2023
+./gmtk-2023: error while loading shared libraries: libSDL2_image-2.0.so.0: cannot open shared object file: No such file or directory
+
+It might happen with any other library.
+
+In this case:
+
+export LD_LIBRARY_PATH="$HOME/portable_par_linux/"
+./gmtk-2023

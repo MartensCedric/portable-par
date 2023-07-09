@@ -1,0 +1,4 @@
+/home/cedric/Documents/Programming/gmtk-2023/cmake-build-debug/CMakeFiles/gmtk-2023.dir
+/home/cedric/Documents/Programming/gmtk-2023/cmake-build-debug/CMakeFiles/copy_assets.dir
+/home/cedric/Documents/Programming/gmtk-2023/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/cedric/Documents/Programming/gmtk-2023/cmake-build-debug/CMakeFiles/rebuild_cache.dir
