@@ -14,6 +14,15 @@
 #include "model.h"
 #include "terrain.h"
 
+
+std::mt19937 gen(0xcedbeef);
+
+glm::vec2 get_random_pos()
+{
+    std::uniform_real_distribution<float> x (-9.f, 9.f);
+    return { x(gen), x(gen)};
+}
+
 float apply_friction(float value, float friction)
 {
     if(value < 0)
@@ -22,7 +31,6 @@ float apply_friction(float value, float friction)
 }
 
 
-std::mt19937 gen(0xcedbeef);
 
 glm::vec2 get_random_velocity(float scale)
 {
@@ -115,7 +123,7 @@ int main(int argc, char** argv)
     Model* flag_pole_model = new Model("assets/mesh/flag_pole.obj");
     Model* flag_top_model = new Model("assets/mesh/flag_top.obj");
 
-    std::vector<Model*> models = {ball_model, map_model, hole_model, flag_top_model, flag_pole_model, light_model};
+    std::vector<Model*> models = {ball_model, map_model, hole_model, flag_top_model, flag_pole_model};
 
     Shader* v_passthrough = new Shader("assets/shaders/passthrough.vs", shader_type::vertex);
     Shader* f_passthrough = new Shader("assets/shaders/passthrough.fs", shader_type::fragment);
@@ -189,6 +197,9 @@ int main(int argc, char** argv)
     bool is_running = true;
     bool wireframe_mode = false;
     bool cull_faces = true;
+    bool winning_animation = false;
+    int winning_animation_frame = 0;
+    int animation_count = 120;
 
     glClearColor(77.f / 255.f, 166.f/255.f, 166.f/225.f, 1.0f);
     glEnable(GL_BLEND);
@@ -330,20 +341,42 @@ int main(int argc, char** argv)
                             }
                             break;
                         case SDL_KeyCode::SDLK_a:
-                            hole_pos = move_hole(hole_pos, glm::vec2(0.0f, 0.2f), terrain);
+                            if(!ball_launched)
+                                hole_pos = move_hole(hole_pos, glm::vec2(0.0f, 0.2f), terrain);
                             break;
                         case SDL_KeyCode::SDLK_d:
-                            hole_pos = move_hole(hole_pos, glm::vec2(0.0f, -0.2f), terrain);
+                            if(!ball_launched)
+                                hole_pos = move_hole(hole_pos, glm::vec2(0.0f, -0.2f), terrain);
                             break;
                         case SDL_KeyCode::SDLK_w:
-                            hole_pos = move_hole(hole_pos, glm::vec2(-0.2f, 0.0f), terrain);
+                            if(!ball_launched)
+                                hole_pos = move_hole(hole_pos, glm::vec2(-0.2f, 0.0f), terrain);
                             break;
                         case SDL_KeyCode::SDLK_s:
-                            hole_pos = move_hole(hole_pos, glm::vec2(0.2f, 0.0f), terrain);
+                            if(!ball_launched)
+                                hole_pos = move_hole(hole_pos, glm::vec2(0.2f, 0.0f), terrain);
                             break;
                         case SDL_KeyCode::SDLK_n:
                             render_shadow_map = !render_shadow_map;
                             std::cout << "Render shadow map: " << render_shadow_map << std::endl;
+                            break;
+
+                        case SDL_KeyCode::SDLK_r:
+                            if(!ball_launched)
+                            {
+                                glm::vec2 new_ball_pos = get_random_pos();
+                                glm::vec2 new_hole_pos = get_random_pos();
+
+                                ball_pos.x = new_ball_pos.x;
+                                ball_pos.z = new_ball_pos.y;
+
+                                hole_pos.x = new_hole_pos.x;
+                                hole_pos.z = new_hole_pos.y;
+
+                                glm::vec2 random_vel = get_random_velocity(9.f);
+                                target_velocity.x = random_vel.x;
+                                target_velocity.z = random_vel.y;
+                            }
                             break;
 
                     }
@@ -365,84 +398,119 @@ int main(int argc, char** argv)
         ball_model->model = glm::mat4(1);
 
         float ball_friction = 0.04f;
-        ball_velocity.x = apply_friction(ball_velocity.x, ball_friction);
-        ball_velocity.z = apply_friction(ball_velocity.z, ball_friction);
-
-        glm::vec3 gradient = terrain.get_gradient(ball_pos.x, ball_pos.z);
-        ball_velocity += gradient;
-
-        if(glm::length(ball_velocity) < 0.05f)
+        if(winning_animation)
         {
-            ball_velocity = glm::vec3(0, 0, 0);
-            render_points = true;
-            ball_launched = false;
-        }
+            float theta_per_f = 0.1f;
+            float z_per_f = 0.05f;
 
-        ball_pos += ball_velocity * delta_t;
+            ball_pos.x = hole_pos.x + glm::cos(theta_per_f * static_cast<float>(winning_animation_frame));
+            ball_pos.y = hole_pos.y + z_per_f * static_cast<float>(winning_animation_frame);
+            ball_pos.z = hole_pos.z + glm::sin(theta_per_f * static_cast<float>(winning_animation_frame));
 
-        if(ball_pos.x  < -10.0f)
-        {
-            ball_pos.x = -9.9;
-            ball_velocity.x = -ball_velocity.x;
-        }
+            winning_animation_frame++;
+            if(animation_count == winning_animation_frame)
+            {
+                winning_animation = false;
+                glm::vec2 new_ball_pos = get_random_pos();
+                glm::vec2 new_hole_pos = get_random_pos();
 
-        if(ball_pos.x > 10.f)
-        {
-            ball_pos.x = 9.9f;
-            ball_velocity.x = -ball_velocity.x;
-        }
+                ball_pos.x = new_ball_pos.x;
+                ball_pos.z = new_ball_pos.y;
 
-        if(ball_pos.z < -10.0f)
-        {
-            ball_pos.z = -9.9f;
-            ball_velocity.z = -ball_velocity.z;
-        }
+                hole_pos.x = new_hole_pos.x;
+                hole_pos.z = new_hole_pos.y;
 
-        if(ball_pos.z > 10.0f)
-        {
-            ball_pos.z = 9.9f;
-            ball_velocity.z = -ball_velocity.z;
-        }
+                glm::vec2 random_vel = get_random_velocity(9.f);
+                target_velocity.x = random_vel.x;
+                target_velocity.z = random_vel.y;
+                winning_animation_frame = 0;
+            }
 
+            ball_model->model = glm::translate(ball_model->model, ball_pos);
+            ball_model->model = glm::scale(ball_model->model, glm::vec3(0.2, 0.2, 0.2f));
 
-        float ball_x = ball_pos.x;
-        float ball_z = ball_pos.z;
-
-
-        camera_target = ball_pos;
-
-        ball_model->model = glm::translate(ball_model->model, glm::vec3( ball_x, -0.75f + terrain.get_height(ball_x, ball_z) * 10.f,  ball_z));
-        ball_model->model = glm::scale(ball_model->model, glm::vec3(0.2, 0.2, 0.2f));
-
-        hole_model->model = glm::mat4(1);
-        hole_pos.y = -0.75f + terrain.get_height(hole_pos.x, hole_pos.z) * 10.f;
-        hole_model->model = glm::translate(hole_model->model, hole_pos);
-        hole_model->model = glm::scale(hole_model->model, glm::vec3(0.2f, 0.2f, 0.2f));
-
-
-        if(!ball_launched && glm::length(glm::vec2(hole_pos.x - ball_pos.x, hole_pos.z - ball_pos.z)) < 5.f)
-        {
-            ball_can_launch = false;
-            hole_model->set_texture(&red_texture);
         }
         else
         {
 
-            ball_can_launch = true;
-            hole_model->set_texture(&white_texture);
+            ball_velocity.x = apply_friction(ball_velocity.x, ball_friction);
+            ball_velocity.z = apply_friction(ball_velocity.z, ball_friction);
+
+            glm::vec3 gradient = terrain.get_gradient(ball_pos.x, ball_pos.z);
+            ball_velocity += gradient;
+
+            if(glm::length(ball_velocity) < 0.05f)
+            {
+                ball_velocity = glm::vec3(0, 0, 0);
+                render_points = true;
+                ball_launched = false;
+            }
+
+            ball_pos += ball_velocity * delta_t;
+
+            if(ball_pos.x  < -10.0f)
+            {
+                ball_pos.x = -9.9;
+                ball_velocity.x = -ball_velocity.x;
+            }
+
+            if(ball_pos.x > 10.f)
+            {
+                ball_pos.x = 9.9f;
+                ball_velocity.x = -ball_velocity.x;
+            }
+
+            if(ball_pos.z < -10.0f)
+            {
+                ball_pos.z = -9.9f;
+                ball_velocity.z = -ball_velocity.z;
+            }
+
+            if(ball_pos.z > 10.0f)
+            {
+                ball_pos.z = 9.9f;
+                ball_velocity.z = -ball_velocity.z;
+            }
+
+
+            float ball_x = ball_pos.x;
+            float ball_z = ball_pos.z;
+
+
+            ball_model->model = glm::translate(ball_model->model, glm::vec3( ball_x, -0.75f + terrain.get_height(ball_x, ball_z) * 10.f,  ball_z));
+            ball_model->model = glm::scale(ball_model->model, glm::vec3(0.2, 0.2, 0.2f));
+
+            hole_model->model = glm::mat4(1);
+            hole_pos.y = -0.75f + terrain.get_height(hole_pos.x, hole_pos.z) * 10.f;
+            hole_model->model = glm::translate(hole_model->model, hole_pos);
+            hole_model->model = glm::scale(hole_model->model, glm::vec3(0.2f, 0.2f, 0.2f));
+
+
+            if(!ball_launched && glm::length(glm::vec2(hole_pos.x - ball_pos.x, hole_pos.z - ball_pos.z)) < 5.f)
+            {
+                ball_can_launch = false;
+                hole_model->set_texture(&red_texture);
+            }
+            else
+            {
+
+                ball_can_launch = true;
+                hole_model->set_texture(&white_texture);
+            }
+
+
+            if(glm::length(glm::vec2(hole_pos.x - ball_pos.x, hole_pos.z - ball_pos.z)) < 0.25f && ball_launched)
+            {
+                winning_animation = true;
+                winning_animation_frame = 0;
+                ball_pos.x = hole_pos.x;
+                ball_pos.z = hole_pos.z;
+                ball_velocity = glm::vec3(0.0f);
+            }
+
         }
 
 
-        if(glm::length(glm::vec2(hole_pos.x - ball_pos.x, hole_pos.z - ball_pos.z)) < 0.25f && ball_launched &&
-            glm::length(ball_velocity) < 1)
-        {
-            std::cout << "You win" << std::endl;
-        }
-//        else
-//        {
-//            std::cout << "dis: " << glm::length(glm::vec2(hole_pos.x - ball_pos.x, hole_pos.z - ball_pos.z)) << std::endl;
-//            std::cout << "vel: " << glm::length(ball_velocity)  << std::endl;
-//        }
 
         flag_top_model->model = glm::mat4(1);
 
