@@ -3,6 +3,7 @@ out vec4 FragColor;
 in vec3 normal;
 in vec2 tex_coords;
 in vec3 world_position;
+in vec4 frag_position_light_space;
 
 
 float ambient_str = 0.25;
@@ -10,6 +11,8 @@ float diffuse_str = 0.4;
 float specular_str = 0.4;
 
 uniform sampler2D current_texture;
+uniform sampler2D shadow_map;
+
 uniform vec3 light_position;
 uniform vec3 view_position;
 
@@ -27,5 +30,10 @@ void main()
     float specular_value = pow(max(dot(view_direction, reflect_direction), 0.0), 32);
     vec3 specular = specular_str * specular_value * vec3(1.0, 1.0, 1.0);
 
-    FragColor = vec4(ambient + diffuse + specular, 1.0);
+    vec3 proj_coords = frag_position_light_space.xyz / frag_position_light_space.w;
+    proj_coords = proj_coords * 0.5 + 0.5;
+    float closest_depth = texture(shadow_map, proj_coords.xy).r;
+    float current_depth = proj_coords.z;
+    float shadow = current_depth > closest_depth ? 1.0 : 0.0;
+    FragColor = vec4(ambient + (1.0 - shadow) * (diffuse + specular), 1.0);
 }
