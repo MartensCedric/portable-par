@@ -95,8 +95,10 @@ int main(int argc, char** argv)
     Model* light_model = new Model("assets/mesh/cube.obj");
     Model* map_model = new Model("assets/mesh/map1.obj");
     Model* hole_model = new Model("assets/mesh/hole.obj");
+    Model* flag_pole_model = new Model("assets/mesh/flag_pole.obj");
+    Model* flag_top_model = new Model("assets/mesh/flag_top.obj");
 
-    std::vector<Model*> models = {ball_model, map_model, hole_model};
+    std::vector<Model*> models = {ball_model, map_model, hole_model, flag_top_model, flag_pole_model};
 
     Shader* v_passthrough = new Shader("assets/shaders/passthrough.vs", shader_type::vertex);
     Shader* f_passthrough = new Shader("assets/shaders/passthrough.fs", shader_type::fragment);
@@ -119,6 +121,8 @@ int main(int argc, char** argv)
     ball_model->set_shader(phong_shader);
     hole_model->set_shader(phong_shader);
     map_model->set_shader(phong_shader);
+    flag_pole_model->set_shader(phong_shader);
+    flag_top_model->set_shader(phong_shader);
 
     delete v_passthrough;
     delete f_passthrough;
@@ -136,9 +140,14 @@ int main(int argc, char** argv)
     Texture green_texture;
     green_texture.load("assets/sprites/green.png");
 
+    Texture red_texture;
+    red_texture.load("assets/sprites/red.png");
+
     ball_model->set_texture(&white_texture);
     hole_model->set_texture(&white_texture);
     map_model->set_texture(&green_texture);
+    flag_pole_model->set_texture(&white_texture);
+    flag_top_model->set_texture(&red_texture);
 
     ball_model->model = glm::mat4(1);
     ball_model->model = glm::scale(ball_model->model, glm::vec3(0.5, 0.5, 0.5));
@@ -290,9 +299,18 @@ int main(int argc, char** argv)
         ball_model->model = glm::scale(ball_model->model, glm::vec3(0.2f, 0.2f, 0.2f));
 
         hole_model->model = glm::mat4(1);
-        hole_pos.y = -0.75f + terrain.get_height(hole_pos.x, hole_pos.z) * 10.f;
+        hole_pos.y = -1.f + terrain.get_height(hole_pos.x, hole_pos.z) * 10.f;
         hole_model->model = glm::translate(hole_model->model, hole_pos);
         hole_model->model = glm::scale(hole_model->model, glm::vec3(0.2f, 0.2f, 0.2f));
+
+        flag_top_model->model = glm::mat4(1);
+
+        flag_top_model->model = glm::translate(flag_top_model->model, glm::vec3(hole_pos.x,   0.25f +  hole_pos.y, hole_pos.z));
+        flag_top_model->model = glm::rotate(flag_top_model->model, glm::radians(90.f), glm::vec3(0.0, 1.0, 0.0));
+
+        flag_pole_model->model = glm::mat4(1);
+        flag_pole_model->model = glm::translate(flag_pole_model->model, glm::vec3(hole_pos.x,  0.25f + hole_pos.y, hole_pos.z));
+
         camera_target = glm::vec3(0.0f, 0.0f, 0.0f);
         camera_direction = glm::normalize(camera_position - camera_target);
 
