@@ -9,6 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <random>
 #include "shader_program.h"
 #include "model.h"
 #include "terrain.h"
@@ -18,6 +19,16 @@ float apply_friction(float value, float friction)
     if(value < 0)
         return std::min(0.0f, value + friction);
     return std::max(0.0f, value - friction);
+}
+
+std::mt19937 gen(0xcedbeef);
+
+glm::vec2 get_random_velocity(float scale)
+{
+    std::uniform_real_distribution<float> x_dist(-scale, scale);
+    std::uniform_real_distribution<float> z_dist(-scale, scale);
+
+    return {x_dist(gen), z_dist(gen)};
 }
 
 glm::vec3 move_hole(glm::vec3 hole, glm::vec2 xz,Terrain& terrain)
@@ -77,7 +88,8 @@ int main(int argc, char** argv)
     glm::vec3 ball_pos = glm::vec3(3.0, 0.0, 0.0);
     glm::vec3 hole_pos = glm::vec3(0, 0, 0);
     glm::vec3 ball_velocity = glm::vec3(0, 0.0, 0.0);
-    glm::vec3 target_velocity = glm::vec3(-6.0, 0.0, 8.0);
+    glm::vec2 random_vel = get_random_velocity(6.0f);
+    glm::vec3 target_velocity = glm::vec3(random_vel.x, 0.0f, random_vel.y);
 
     Model* ball_model = new Model("assets/mesh/ball.obj");
     Model* light_model = new Model("assets/mesh/cube.obj");
@@ -178,6 +190,7 @@ int main(int argc, char** argv)
     while(is_running)
     {
         SDL_Event e;
+        glm::vec2 vel = get_random_velocity(7.0f);
         while(SDL_PollEvent(&e) > 0)
         {
             switch(e.type)
@@ -211,19 +224,20 @@ int main(int argc, char** argv)
                         case SDL_KeyCode::SDLK_SPACE:
                             ball_launched = true;
                             ball_velocity = target_velocity;
-                            std::cout << "launch ball" << std::endl;
+                            target_velocity = glm::vec3(vel.x, 0.0f, vel.y);
+                            render_points = false;
                             break;
                         case SDL_KeyCode::SDLK_a:
-                            hole_pos = move_hole(hole_pos, glm::vec2(-0.2f, 0.0f), terrain);
+                            hole_pos = move_hole(hole_pos, glm::vec2(0.0f, 0.2f), terrain);
                             break;
                         case SDL_KeyCode::SDLK_d:
-                            hole_pos = move_hole(hole_pos, glm::vec2(0.2f, 0.0f), terrain);
-                            break;
-                        case SDL_KeyCode::SDLK_w:
                             hole_pos = move_hole(hole_pos, glm::vec2(0.0f, -0.2f), terrain);
                             break;
+                        case SDL_KeyCode::SDLK_w:
+                            hole_pos = move_hole(hole_pos, glm::vec2(-0.2f, 0.0f), terrain);
+                            break;
                         case SDL_KeyCode::SDLK_s:
-                            hole_pos = move_hole(hole_pos, glm::vec2(0.0f, 0.2f), terrain);
+                            hole_pos = move_hole(hole_pos, glm::vec2(0.2f, 0.0f), terrain);
                             break;
 
                     }
@@ -258,9 +272,12 @@ int main(int argc, char** argv)
         glm::vec3 gradient = terrain.get_gradient(ball_pos.x, ball_pos.z);
         ball_velocity += gradient;
 
-        if(glm::length(ball_velocity) < 0.005f)
+        if(glm::length(ball_velocity) < 0.05f)
         {
             ball_velocity = glm::vec3(0, 0, 0);
+            render_points = true;
+            ball_launched = false;
+            std::cout << "stopped" << std::endl;
         }
 //        std::cout << "gradient: " << gradient[0] << " " << gradient[2] << std::endl;
 //        std::cout << "vel: " << ball_velocity[0] << " " << ball_velocity[2] << std::endl;
@@ -275,6 +292,7 @@ int main(int argc, char** argv)
         hole_model->model = glm::mat4(1);
         hole_pos.y = -0.75f + terrain.get_height(hole_pos.x, hole_pos.z) * 10.f;
         hole_model->model = glm::translate(hole_model->model, hole_pos);
+        hole_model->model = glm::scale(hole_model->model, glm::vec3(0.2f, 0.2f, 0.2f));
         camera_target = glm::vec3(0.0f, 0.0f, 0.0f);
         camera_direction = glm::normalize(camera_position - camera_target);
 
