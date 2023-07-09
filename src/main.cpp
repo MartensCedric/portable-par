@@ -79,14 +79,14 @@ int main(int argc, char** argv)
     glm::vec3 camera_right = glm::normalize(glm::cross(up, camera_direction));
 
     glm::vec3 camera_up = glm::normalize(glm::cross(camera_direction, camera_right));
-
+    float near_plane = 0.1f, far_plane = 100.f;
     glm::mat4 proj = glm::perspective(glm::radians(45.f), (float)1280.f/(float)720.f, 0.1f, 100.f);
 
     glm::mat4 view = glm::mat4(1.0f);
     view = glm::lookAt(camera_position,camera_target, camera_up);
 
     glm::vec3 light_pos = glm::vec3(5.0, 10.0, 2.0);
-    float near_plane = 1.0f, far_plane = 7.5f;
+
     glm::mat4 light_projection = glm::ortho(-10.f, 10.f, -10.f, 10.f, near_plane, far_plane);
     glm::mat4 light_view = glm::lookAt(light_pos, glm::vec3(0.f, 0.0f, 0.f), glm::vec3(0.0f, 1.0f, 0.0f));
 
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
     Model* flag_pole_model = new Model("assets/mesh/flag_pole.obj");
     Model* flag_top_model = new Model("assets/mesh/flag_top.obj");
 
-    std::vector<Model*> models = {ball_model, map_model, hole_model, flag_top_model, flag_pole_model};
+    std::vector<Model*> models = {ball_model, map_model, hole_model, flag_top_model, flag_pole_model, light_model};
 
     Shader* v_passthrough = new Shader("assets/shaders/passthrough.vs", shader_type::vertex);
     Shader* f_passthrough = new Shader("assets/shaders/passthrough.fs", shader_type::fragment);
@@ -116,6 +116,10 @@ int main(int argc, char** argv)
     Shader* dots_v_passthrough = new Shader("assets/shaders/dots.vs", shader_type::vertex);
     Shader* dots_f_passthrough = new Shader("assets/shaders/dots.fs", shader_type::fragment);
 
+    Shader* v_debug_shadow_map = new Shader("assets/shaders/debug_shadow_map.vs", shader_type::vertex);
+    Shader* f_debug_shadow_map = new Shader("assets/shaders/debug_shadow_map.fs", shader_type::fragment);
+
+
     if(!v_passthrough->compile()) return -1;
     if(!f_passthrough->compile()) return -1;
     if(!f_phong->compile()) return -1;
@@ -123,18 +127,21 @@ int main(int argc, char** argv)
     if(!dots_f_passthrough->compile()) return -1;
     if(!v_shadow->compile()) return -1;
     if(!f_shadow->compile()) return -1;
+    if(!v_debug_shadow_map->compile()) return -1;
+    if(!f_debug_shadow_map->compile()) return -1;
 
     ShaderProgram* phong_shader = new ShaderProgram(v_passthrough, f_phong);
-//    ShaderProgram* texture_shader = new ShaderProgram(v_passthrough, f_passthrough);
+    ShaderProgram* texture_shader = new ShaderProgram(v_passthrough, f_passthrough);
     ShaderProgram* dots_shader = new ShaderProgram(dots_v_passthrough, dots_f_passthrough);
     ShaderProgram* shadow_shader = new ShaderProgram(v_shadow, f_shadow);
-
+    ShaderProgram* shadow_debugger = new ShaderProgram(v_debug_shadow_map, f_debug_shadow_map);
 
     ball_model->set_shader(phong_shader);
     hole_model->set_shader(phong_shader);
     map_model->set_shader(phong_shader);
     flag_pole_model->set_shader(phong_shader);
     flag_top_model->set_shader(phong_shader);
+    light_model->set_shader(texture_shader);
 
     delete v_passthrough;
     delete f_passthrough;
@@ -160,11 +167,14 @@ int main(int argc, char** argv)
     map_model->set_texture(&green_texture);
     flag_pole_model->set_texture(&white_texture);
     flag_top_model->set_texture(&red_texture);
+    light_model->set_texture(&white_texture);
 
     ball_model->model = glm::mat4(1);
     ball_model->model = glm::scale(ball_model->model, glm::vec3(0.5, 0.5, 0.5));
 
     map_model->model = glm::scale(map_model->model, 10.0f * glm::vec3(1.0, 1.0, 1.0));
+
+    light_model->model = glm::translate(light_model->model, light_pos);
 
     bool is_running = true;
     bool wireframe_mode = false;
@@ -182,7 +192,6 @@ int main(int argc, char** argv)
     float accumulator_f = 0.0f;
     uint32_t delta = 16;
     float delta_t = static_cast<float>(delta) / 1000.f;
-
 
     bool render_points = true;
     bool ball_launched = false;
@@ -206,10 +215,11 @@ int main(int argc, char** argv)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), nullptr);
     glEnableVertexAttribArray(0);
 
+    glActiveTexture(GL_TEXTURE1);
     uint32_t depth_map_fbo;
     glGenFramebuffers(1, &depth_map_fbo);
 
-    const uint32_t shadow_width = 1024, shadow_height = 1024;
+    const uint32_t shadow_width = 1280, shadow_height = 720;
     uint32_t depth_map;
     glGenTextures(1, &depth_map);
     glBindTexture(GL_TEXTURE_2D, depth_map);
@@ -227,24 +237,36 @@ int main(int argc, char** argv)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
-//    uint32_t shadow_map_vao;
-//    uint32_t shadow_map_vbo;
-//    float quad_vertices[] = {
-//            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
-//            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-//            1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
-//            1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-//    };
-//
-//    glGenVertexArrays(1, &shadow_map_vao);
-//    glGenBuffers(1, &shadow_map_vao);
-//    glBindVertexArray(shadow_map_vao);
-//    glBindBuffer(GL_ARRAY_BUFFER, shadow_map_vbo);
-//    glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), &quad_vertices, GL_STATIC_DRAW);
-//    glEnableVertexAttribArray(0);
-//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-//    glEnableVertexAttribArray(1);
-//    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) (3*sizeof(float)));
+    uint32_t shadow_map_vao;
+    uint32_t shadow_map_vbo;
+    float quad_vertices[] = {
+            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+            1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+            1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    };
+
+    glGenVertexArrays(1, &shadow_map_vao);
+    glGenBuffers(1, &shadow_map_vbo);
+    glBindVertexArray(shadow_map_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, shadow_map_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), &quad_vertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) (3*sizeof(float)));
+
+
+    shadow_debugger->use();
+
+    int depth_map_location = glGetUniformLocation(shadow_debugger->get_id(), "depth_map");
+    glUniform1i(depth_map_location, 1);
+
+    int near_plane_location = glGetUniformLocation(shadow_debugger->get_id(), "near_plane");
+    glUniform1f(near_plane_location, near_plane);
+
+    int far_plane_location = glGetUniformLocation(shadow_debugger->get_id(), "far_plane");
+    glUniform1i(far_plane_location, far_plane);
 
     double camera_around_angle = 0.0;
 
@@ -395,7 +417,12 @@ int main(int argc, char** argv)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         if(render_shadow_map)
         {
-
+            shadow_debugger->use();
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, depth_map);
+            glBindVertexArray(shadow_map_vao);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            glBindVertexArray(0);
         }
         else
         {

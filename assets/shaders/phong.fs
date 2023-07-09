@@ -34,6 +34,7 @@ void main()
     proj_coords = proj_coords * 0.5 + 0.5;
     float closest_depth = texture(shadow_map, proj_coords.xy).r;
     float current_depth = proj_coords.z;
-    float shadow = current_depth > closest_depth ? 1.0 : 0.0;
+    float bias = 0.005f;
+    float shadow = current_depth - bias > closest_depth ? 1.0 : 0.0;
     FragColor = vec4(ambient + (1.0 - shadow) * (diffuse + specular), 1.0);
 }
