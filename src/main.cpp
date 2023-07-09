@@ -94,7 +94,7 @@ int main(int argc, char** argv)
     glm::mat4 view = glm::mat4(1.0f);
     view = glm::lookAt(camera_position,camera_target, camera_up);
 
-    glm::vec3 light_pos = glm::vec3(5.0, 10.0, 2.0);
+    glm::vec3 light_pos = glm::vec3(5.0, 20.0, 2.0);
 
     glm::mat4 light_projection = glm::ortho(-10.f, 10.f, -10.f, 10.f, near_plane, far_plane);
     glm::mat4 light_view = glm::lookAt(light_pos, glm::vec3(0.f, 0.0f, 0.f), glm::vec3(0.0f, 1.0f, 0.0f));
