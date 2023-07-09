@@ -198,6 +198,8 @@ int main(int argc, char** argv)
     bool wireframe_mode = false;
     bool cull_faces = true;
     bool winning_animation = false;
+
+    bool color_mode = true;
     int winning_animation_frame = 0;
     int animation_count = 120;
 
@@ -326,10 +328,10 @@ int main(int argc, char** argv)
                             camera_position += glm::vec3(0, -1, 0);
                             break;
                         case SDL_KeyCode::SDLK_LEFT:
-                            camera_around_angle += 0.15;
+                            camera_around_angle += 0.08;
                             break;
                         case SDL_KeyCode::SDLK_RIGHT:
-                            camera_around_angle -= 0.15;
+                            camera_around_angle -= 0.08;
                             break;
                         case SDL_KeyCode::SDLK_SPACE:
                             if(ball_can_launch)
@@ -342,19 +344,19 @@ int main(int argc, char** argv)
                             break;
                         case SDL_KeyCode::SDLK_a:
                             if(!ball_launched)
-                                hole_pos = move_hole(hole_pos, glm::vec2(0.0f, 0.2f), terrain);
+                                hole_pos = move_hole(hole_pos, glm::vec2(0.0f, 0.1f), terrain);
                             break;
                         case SDL_KeyCode::SDLK_d:
                             if(!ball_launched)
-                                hole_pos = move_hole(hole_pos, glm::vec2(0.0f, -0.2f), terrain);
+                                hole_pos = move_hole(hole_pos, glm::vec2(0.0f, -0.1f), terrain);
                             break;
                         case SDL_KeyCode::SDLK_w:
                             if(!ball_launched)
-                                hole_pos = move_hole(hole_pos, glm::vec2(-0.2f, 0.0f), terrain);
+                                hole_pos = move_hole(hole_pos, glm::vec2(-0.1f, 0.0f), terrain);
                             break;
                         case SDL_KeyCode::SDLK_s:
                             if(!ball_launched)
-                                hole_pos = move_hole(hole_pos, glm::vec2(0.2f, 0.0f), terrain);
+                                hole_pos = move_hole(hole_pos, glm::vec2(0.1f, 0.0f), terrain);
                             break;
                         case SDL_KeyCode::SDLK_n:
                             render_shadow_map = !render_shadow_map;
@@ -377,6 +379,10 @@ int main(int argc, char** argv)
                                 target_velocity.x = random_vel.x;
                                 target_velocity.z = random_vel.y;
                             }
+                            break;
+                        case SDL_KeyCode::SDLK_k:
+                            color_mode = !color_mode;
+                            std::cout << "Ball color : " << color_mode << std::endl;
                             break;
 
                     }
@@ -486,6 +492,15 @@ int main(int argc, char** argv)
             hole_model->model = glm::scale(hole_model->model, glm::vec3(0.2f, 0.2f, 0.2f));
 
 
+            if(ball_launched && color_mode && glm::length(ball_velocity) > 3.5f)
+            {
+                ball_model->set_texture(&red_texture);
+            }
+            else
+            {
+                ball_model->set_texture(&white_texture);
+            }
+
             if(!ball_launched && glm::length(glm::vec2(hole_pos.x - ball_pos.x, hole_pos.z - ball_pos.z)) < 5.f)
             {
                 ball_can_launch = false;
@@ -499,7 +514,8 @@ int main(int argc, char** argv)
             }
 
 
-            if(glm::length(glm::vec2(hole_pos.x - ball_pos.x, hole_pos.z - ball_pos.z)) < 0.25f && ball_launched)
+            if(glm::length(glm::vec2(hole_pos.x - ball_pos.x, hole_pos.z - ball_pos.z)) < 0.25f && ball_launched
+            && glm::length(ball_velocity) < 3.5f)
             {
                 winning_animation = true;
                 winning_animation_frame = 0;
