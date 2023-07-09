@@ -6,7 +6,7 @@ img = cv2.imread('height.png',  cv2.IMREAD_UNCHANGED)
 
 gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 print(gray.astype(float))
-gray = (gray.astype(float)**(0.92698467586)).astype(np.uint8)
+gray = (gray.astype(float)**(0.9142878)).astype(np.uint8)
 print(gray)
 cv2.imwrite('gray.png', gray)
 blur = cv2.GaussianBlur(gray, (7,7), 1.3, 1.3)

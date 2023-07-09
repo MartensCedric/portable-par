@@ -378,20 +378,41 @@ int main(int argc, char** argv)
         ball_pos += ball_velocity * delta_t;
 
 
-        if(ball_pos.x  < -10.0f || ball_pos.x > 10.f)
-            ball_pos.x = 0.0f;
+        if(ball_pos.x  < -10.0f)
+        {
+            ball_pos.x = -9.9;
+            ball_velocity.x = -ball_velocity.x;
+        }
 
-        if(ball_pos.z  < -10.0f || ball_pos.z > 10.f)
-            ball_pos.z = 0.0f;
+        if(ball_pos.x > 10.f)
+        {
+            ball_pos.x = 9.9f;
+            ball_velocity.x = -ball_velocity.x;
+        }
+
+        if(ball_pos.z < -10.0f)
+        {
+            ball_pos.z = -9.9f;
+            ball_velocity.z = -ball_velocity.z;
+        }
+
+        if(ball_pos.z > 10.0f)
+        {
+            ball_pos.z = 9.9f;
+            ball_pos.z = -ball_velocity.z;
+        }
+
 
         float ball_x = ball_pos.x;
         float ball_z = ball_pos.z;
 
-        ball_model->model = glm::translate(ball_model->model, glm::vec3( ball_x, -1.f + terrain.get_height(ball_x, ball_z) * 10.f,  ball_z));
-        ball_model->model = glm::scale(ball_model->model, glm::vec3(0.2f, 0.2f, 0.2f));
+        camera_target = ball_pos;
+
+        ball_model->model = glm::translate(ball_model->model, glm::vec3( ball_x, -0.75f + terrain.get_height(ball_x, ball_z) * 10.f,  ball_z));
+        ball_model->model = glm::scale(ball_model->model, glm::vec3(0.2, 0.2, 0.2f));
 
         hole_model->model = glm::mat4(1);
-        hole_pos.y = -1.f + terrain.get_height(hole_pos.x, hole_pos.z) * 10.f;
+        hole_pos.y = -0.75f + terrain.get_height(hole_pos.x, hole_pos.z) * 10.f;
         hole_model->model = glm::translate(hole_model->model, hole_pos);
         hole_model->model = glm::scale(hole_model->model, glm::vec3(0.2f, 0.2f, 0.2f));
 
@@ -400,6 +421,7 @@ int main(int argc, char** argv)
 
         flag_top_model->model = glm::translate(flag_top_model->model, glm::vec3(hole_pos.x,   0.25f +  hole_pos.y, hole_pos.z));
         flag_top_model->model = glm::rotate(flag_top_model->model, glm::radians(90.f), glm::vec3(0.0, 1.0, 0.0));
+
 
         flag_pole_model->model = glm::mat4(1);
         flag_pole_model->model = glm::translate(flag_pole_model->model, glm::vec3(hole_pos.x,  0.25f + hole_pos.y, hole_pos.z));
@@ -509,11 +531,31 @@ int main(int argc, char** argv)
 
                         points_pos += points_velocity * 0.016f;
 
-                        if(points_pos.x  < -10.0f || points_pos.x > 10.f)
-                            points_pos.x = 0.0f;
 
-                        if(points_pos.z  < -10.0f || points_pos.z > 10.f)
-                            points_pos.z = 0.0f;
+                        if(points_pos.x  < -10.0f)
+                        {
+                            points_pos.x = -9.9;
+                            points_velocity.x = -points_velocity.x;
+                        }
+
+                        if(points_pos.x > 10.f)
+                        {
+                            points_pos.x = 9.9f;
+                            points_velocity.x = -points_velocity.x;
+                        }
+
+                        if(points_pos.z < -10.0f)
+                        {
+                            points_pos.z = -9.9f;
+                            points_velocity.z = -points_velocity.z;
+                        }
+
+                        if(points_pos.z > 10.0f)
+                        {
+                            points_pos.z = 9.9f;
+                            points_velocity.z = -points_velocity.z;
+                        }
+
 
                         if(i % 6 == 0)
                         {
