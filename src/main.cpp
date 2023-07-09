@@ -379,7 +379,7 @@ int main(int argc, char** argv)
         }
 
         ball_pos += ball_velocity * delta_t;
-        
+
         if(ball_pos.x  < -10.0f)
         {
             ball_pos.x = -9.9;
@@ -401,12 +401,13 @@ int main(int argc, char** argv)
         if(ball_pos.z > 10.0f)
         {
             ball_pos.z = 9.9f;
-            ball_pos.z = -ball_velocity.z;
+            ball_velocity.z = -ball_velocity.z;
         }
 
 
         float ball_x = ball_pos.x;
         float ball_z = ball_pos.z;
+
 
         camera_target = ball_pos;
 
@@ -432,11 +433,16 @@ int main(int argc, char** argv)
         }
 
 
-        if(glm::length(glm::vec2(hole_pos.x - ball_pos.x, hole_pos.z - ball_pos.z)) < 0.1 && ball_launched &&
-            glm::length(ball_velocity) < 0.5)
+        if(glm::length(glm::vec2(hole_pos.x - ball_pos.x, hole_pos.z - ball_pos.z)) < 0.25f && ball_launched &&
+            glm::length(ball_velocity) < 1)
         {
             std::cout << "You win" << std::endl;
         }
+//        else
+//        {
+//            std::cout << "dis: " << glm::length(glm::vec2(hole_pos.x - ball_pos.x, hole_pos.z - ball_pos.z)) << std::endl;
+//            std::cout << "vel: " << glm::length(ball_velocity)  << std::endl;
+//        }
 
         flag_top_model->model = glm::mat4(1);
 
