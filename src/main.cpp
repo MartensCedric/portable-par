@@ -85,6 +85,12 @@ int main(int argc, char** argv)
     view = glm::lookAt(camera_position,camera_target, camera_up);
 
     glm::vec3 light_pos = glm::vec3(5.0, 10.0, 2.0);
+    float near_plane = 1.0f, far_plane = 7.5f;
+    glm::mat4 light_projection = glm::ortho(-10.f, 10.f, -10.f, 10.f, near_plane, far_plane);
+    glm::mat4 light_view = glm::lookAt(light_pos, glm::vec3(0.f, 0.0f, 0.f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    glm::mat4 light_space_matrix = light_projection * light_view;
+
     glm::vec3 ball_pos = glm::vec3(3.0, 0.0, 0.0);
     glm::vec3 hole_pos = glm::vec3(0, 0, 0);
     glm::vec3 ball_velocity = glm::vec3(0, 0.0, 0.0);
@@ -339,6 +345,12 @@ int main(int argc, char** argv)
         camera_up = glm::normalize(glm::cross(camera_direction, camera_right));
         view = glm::lookAt(camera_position,camera_target, camera_up);
 
+        glViewport(0, 0, shadow_width, shadow_height);
+        glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 
         glViewport(0, 0, 1280, 720);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -362,6 +374,7 @@ int main(int argc, char** argv)
             int view_pos_location = glGetUniformLocation(current_shader->get_id(), "view_position");
             glUniform3fv(view_pos_location, 1, &camera_position[0]);
 
+            glBindTexture(GL_TEXTURE_2D, depth_map);
             model->render();
         }
 
