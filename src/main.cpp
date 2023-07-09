@@ -38,6 +38,7 @@ glm::vec3 move_hole(glm::vec3 hole, glm::vec2 xz,Terrain& terrain)
     return hole;
 }
 
+
 int main(int argc, char** argv)
 {
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -185,6 +186,7 @@ int main(int argc, char** argv)
 
     bool render_points = true;
     bool ball_launched = false;
+    bool render_shadow_map = false;
     std::vector<float> points = {
             0.0f, 3.0f, 0.0f,
             0.0f, 0.25f, 0.0f,
@@ -223,6 +225,26 @@ int main(int argc, char** argv)
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+//    uint32_t shadow_map_vao;
+//    uint32_t shadow_map_vbo;
+//    float quad_vertices[] = {
+//            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+//            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+//            1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+//            1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+//    };
+//
+//    glGenVertexArrays(1, &shadow_map_vao);
+//    glGenBuffers(1, &shadow_map_vao);
+//    glBindVertexArray(shadow_map_vao);
+//    glBindBuffer(GL_ARRAY_BUFFER, shadow_map_vbo);
+//    glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), &quad_vertices, GL_STATIC_DRAW);
+//    glEnableVertexAttribArray(0);
+//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+//    glEnableVertexAttribArray(1);
+//    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) (3*sizeof(float)));
 
     double camera_around_angle = 0.0;
 
@@ -279,6 +301,10 @@ int main(int argc, char** argv)
                         case SDL_KeyCode::SDLK_s:
                             hole_pos = move_hole(hole_pos, glm::vec2(0.2f, 0.0f), terrain);
                             break;
+                        case SDL_KeyCode::SDLK_n:
+                            render_shadow_map = !render_shadow_map;
+                            std::cout << "Render shadow map: " << render_shadow_map << std::endl;
+                            break;
 
                     }
             }
@@ -301,7 +327,7 @@ int main(int argc, char** argv)
             glDisable(GL_CULL_FACE);
         }
 
-        light_pos = camera_position  + glm::vec3(0.0, 0.0, 10.0f);
+        light_pos = camera_position  + glm::vec3(0.0, 2.0, 10.0f);
 
         ball_model->model = glm::mat4(1);
 
@@ -366,89 +392,97 @@ int main(int argc, char** argv)
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-
-        glViewport(0, 0, 1280, 720);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-        for(auto model : models)
+        if(render_shadow_map)
         {
 
-            ShaderProgram* current_shader = model->get_shader();
-            current_shader->use();
-
-            light_space_matrix_loc = glGetUniformLocation(current_shader->get_id(), "light_space_matrix");
-            glUniformMatrix4fv(light_space_matrix_loc, 1, GL_FALSE, glm::value_ptr(light_space_matrix));
-
-            int texture_uniform_location = glGetUniformLocation(current_shader->get_id(), "current_texture");
-            glUniform1i(texture_uniform_location, 0);
-
-            int view_location = glGetUniformLocation(current_shader->get_id(), "view");
-            glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view));
-
-            int projection_location = glGetUniformLocation(current_shader->get_id(), "projection");
-            glUniformMatrix4fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
-
-            int light_pos_location = glGetUniformLocation(current_shader->get_id(), "light_position");
-            glUniform3fv(light_pos_location, 1, &light_pos[0]);
-
-            int view_pos_location = glGetUniformLocation(current_shader->get_id(), "view_position");
-            glUniform3fv(view_pos_location, 1, &camera_position[0]);
-
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, depth_map);
-            model->render();
         }
-
-        if(render_points)
+        else
         {
-            // simulate 30 frames
-            glm::vec3 points_velocity = target_velocity;
-            glm::vec3 points_pos = ball_pos;
+            glViewport(0, 0, 1280, 720);
 
-            if(!ball_launched)
+            for(auto model : models)
             {
-                for(int i = 1; i <= 30; i++)
-                {
-                    points_velocity.x = apply_friction(points_velocity.x, ball_friction);
-                    points_velocity.z = apply_friction(points_velocity.z, ball_friction);
+                ShaderProgram* current_shader = model->get_shader();
+                current_shader->use();
 
-                    glm::vec3 gradient = terrain.get_gradient(points_pos.x, points_pos.z);
-                    points_velocity += gradient;
+                light_space_matrix_loc = glGetUniformLocation(current_shader->get_id(), "light_space_matrix");
+                glUniformMatrix4fv(light_space_matrix_loc, 1, GL_FALSE, glm::value_ptr(light_space_matrix));
 
-                    if(glm::length(points_velocity) < 0.005f)
-                    {
-                        points_velocity = glm::vec3(0, 0, 0);
-                    }
+                int texture_uniform_location = glGetUniformLocation(current_shader->get_id(), "current_texture");
+                glUniform1i(texture_uniform_location, 0);
 
-                    points_pos += points_velocity * 0.016f;
+                int view_location = glGetUniformLocation(current_shader->get_id(), "view");
+                glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view));
 
-                    if(i % 6 == 0)
-                    {
-                        int offset = 3*((i/6) - 1);
+                int projection_location = glGetUniformLocation(current_shader->get_id(), "projection");
+                glUniformMatrix4fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
 
-                        points[offset] = points_pos[0];
-                        points[offset + 1] = -0.75f + terrain.get_height(points_pos[0], points_pos[2]) * 10.f;
-                        points[offset + 2] =  points_pos[2];
-                    }
-                }
+                int light_pos_location = glGetUniformLocation(current_shader->get_id(), "light_position");
+                glUniform3fv(light_pos_location, 1, &light_pos[0]);
+
+                int view_pos_location = glGetUniformLocation(current_shader->get_id(), "view_position");
+                glUniform3fv(view_pos_location, 1, &camera_position[0]);
+
+                int shadow_location = glGetUniformLocation(current_shader->get_id(), "shadow_map");
+                glUniform1i(shadow_location, 1);
+
+//                glActiveTexture(GL_TEXTURE1);
+//                glBindTexture(GL_TEXTURE_2D, depth_map);
+                model->render();
             }
 
-            glBindVertexArray(points_vao);
-            glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
-            glBufferSubData(GL_ARRAY_BUFFER,0, points.size() * sizeof(float), points.data());
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            if(render_points)
+            {
+                // simulate 30 frames
+                glm::vec3 points_velocity = target_velocity;
+                glm::vec3 points_pos = ball_pos;
 
-            dots_shader->use();
-            int view_location = glGetUniformLocation(dots_shader->get_id(), "view");
-            glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view));
+                if(!ball_launched)
+                {
+                    for(int i = 1; i <= 30; i++)
+                    {
+                        points_velocity.x = apply_friction(points_velocity.x, ball_friction);
+                        points_velocity.z = apply_friction(points_velocity.z, ball_friction);
 
-            int projection_location = glGetUniformLocation(dots_shader->get_id(), "projection");
-            glUniformMatrix4fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
-            glBindVertexArray(points_vao);
-            glDrawArrays(GL_POINTS, 0, points.size() / 3);
-            glBindVertexArray(0);
+                        glm::vec3 gradient = terrain.get_gradient(points_pos.x, points_pos.z);
+                        points_velocity += gradient;
+
+                        if(glm::length(points_velocity) < 0.005f)
+                        {
+                            points_velocity = glm::vec3(0, 0, 0);
+                        }
+
+                        points_pos += points_velocity * 0.016f;
+
+                        if(i % 6 == 0)
+                        {
+                            int offset = 3*((i/6) - 1);
+
+                            points[offset] = points_pos[0];
+                            points[offset + 1] = -0.75f + terrain.get_height(points_pos[0], points_pos[2]) * 10.f;
+                            points[offset + 2] =  points_pos[2];
+                        }
+                    }
+                }
+
+                glBindVertexArray(points_vao);
+                glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
+                glBufferSubData(GL_ARRAY_BUFFER,0, points.size() * sizeof(float), points.data());
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+                dots_shader->use();
+                int view_location = glGetUniformLocation(dots_shader->get_id(), "view");
+                glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view));
+
+                int projection_location = glGetUniformLocation(dots_shader->get_id(), "projection");
+                glUniformMatrix4fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
+                glBindVertexArray(points_vao);
+                glDrawArrays(GL_POINTS, 0, points.size() / 3);
+                glBindVertexArray(0);
+            }
         }
+
 
         uint32_t current_time_ms = SDL_GetTicks();
         delta = current_time_ms -  last_time_ms;
