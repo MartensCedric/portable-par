@@ -21,6 +21,7 @@ float apply_friction(float value, float friction)
     return std::max(0.0f, value - friction);
 }
 
+
 std::mt19937 gen(0xcedbeef);
 
 glm::vec2 get_random_velocity(float scale)
@@ -104,7 +105,7 @@ int main(int argc, char** argv)
     glm::vec3 ball_pos = glm::vec3(3.0, 0.0, 0.0);
     glm::vec3 hole_pos = glm::vec3(0, 0, 0);
     glm::vec3 ball_velocity = glm::vec3(0, 0.0, 0.0);
-    glm::vec2 random_vel = get_random_velocity(7.0f);
+    glm::vec2 random_vel = get_random_velocity(9.0f);
     glm::vec3 target_velocity = glm::vec3(random_vel.x, 0.0f, random_vel.y);
 
     Model* ball_model = new Model("assets/mesh/ball.obj");
@@ -206,6 +207,7 @@ int main(int argc, char** argv)
 
     bool render_points = true;
     bool ball_launched = false;
+    bool ball_can_launch = false;
     bool render_shadow_map = false;
     std::vector<float> points = {
             0.0f, 3.0f, 0.0f,
@@ -287,7 +289,7 @@ int main(int argc, char** argv)
     while(is_running)
     {
         SDL_Event e;
-        glm::vec2 vel = get_random_velocity(7.0f);
+        glm::vec2 vel = get_random_velocity(9.0f);
         while(SDL_PollEvent(&e) > 0)
         {
             switch(e.type)
@@ -319,10 +321,13 @@ int main(int argc, char** argv)
                             camera_around_angle -= 0.15;
                             break;
                         case SDL_KeyCode::SDLK_SPACE:
-                            ball_launched = true;
-                            ball_velocity = target_velocity;
-                            target_velocity = glm::vec3(vel.x, 0.0f, vel.y);
-                            render_points = false;
+                            if(ball_can_launch)
+                            {
+                                ball_launched = true;
+                                ball_velocity = target_velocity;
+                                target_velocity = glm::vec3(vel.x, 0.0f, vel.y);
+                                render_points = false;
+                            }
                             break;
                         case SDL_KeyCode::SDLK_a:
                             hole_pos = move_hole(hole_pos, glm::vec2(0.0f, 0.2f), terrain);
@@ -372,12 +377,9 @@ int main(int argc, char** argv)
             render_points = true;
             ball_launched = false;
         }
-//        std::cout << "gradient: " << gradient[0] << " " << gradient[2] << std::endl;
-//        std::cout << "vel: " << ball_velocity[0] << " " << ball_velocity[2] << std::endl;
-//        std::cout << "pos: " << ball_pos[0] << " " << ball_pos[2] << std::endl;
+
         ball_pos += ball_velocity * delta_t;
-
-
+        
         if(ball_pos.x  < -10.0f)
         {
             ball_pos.x = -9.9;
@@ -416,6 +418,25 @@ int main(int argc, char** argv)
         hole_model->model = glm::translate(hole_model->model, hole_pos);
         hole_model->model = glm::scale(hole_model->model, glm::vec3(0.2f, 0.2f, 0.2f));
 
+
+        if(!ball_launched && glm::length(glm::vec2(hole_pos.x - ball_pos.x, hole_pos.z - ball_pos.z)) < 5.f)
+        {
+            ball_can_launch = false;
+            hole_model->set_texture(&red_texture);
+        }
+        else
+        {
+
+            ball_can_launch = true;
+            hole_model->set_texture(&white_texture);
+        }
+
+
+        if(glm::length(glm::vec2(hole_pos.x - ball_pos.x, hole_pos.z - ball_pos.z)) < 0.1 && ball_launched &&
+            glm::length(ball_velocity) < 0.5)
+        {
+            std::cout << "You win" << std::endl;
+        }
 
         flag_top_model->model = glm::mat4(1);
 
