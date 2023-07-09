@@ -349,7 +349,9 @@ int main(int argc, char** argv)
             glDisable(GL_CULL_FACE);
         }
 
-        light_pos = camera_position  + glm::vec3(0.0, 2.0, 10.0f);
+        light_model->model = glm::mat4(1.f);
+        light_model->model = glm::translate(light_model->model, light_pos);
+        light_model->model = glm::scale(light_model->model, glm::vec3(0.2f, 0.2f, 0.2f));
 
         ball_model->model = glm::mat4(1);
 
