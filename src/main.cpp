@@ -20,6 +20,13 @@ float apply_friction(float value, float friction)
     return std::max(0.0f, value - friction);
 }
 
+glm::vec3 move_hole(glm::vec3 hole, glm::vec2 xz,Terrain& terrain)
+{
+    hole.x += xz.x;
+    hole.z += xz.y;
+    return hole;
+}
+
 int main(int argc, char** argv)
 {
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -34,7 +41,7 @@ int main(int argc, char** argv)
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-    SDL_Window* window = SDL_CreateWindow("GMTK-2023", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    SDL_Window* window = SDL_CreateWindow("notcodegolf - GMTK2023", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if(!window)
     {
         std::cerr << "Failed to initialize window" << std::endl;
@@ -68,14 +75,16 @@ int main(int argc, char** argv)
 
     glm::vec3 light_pos = glm::vec3(5.0, 10.0, 2.0);
     glm::vec3 ball_pos = glm::vec3(3.0, 0.0, 0.0);
+    glm::vec3 hole_pos = glm::vec3(0, 0, 0);
     glm::vec3 ball_velocity = glm::vec3(0, 0.0, 0.0);
     glm::vec3 target_velocity = glm::vec3(-6.0, 0.0, 8.0);
 
     Model* ball_model = new Model("assets/mesh/ball.obj");
     Model* light_model = new Model("assets/mesh/cube.obj");
     Model* map_model = new Model("assets/mesh/map1.obj");
+    Model* hole_model = new Model("assets/mesh/hole.obj");
 
-    std::vector<Model*> models = {ball_model, map_model};
+    std::vector<Model*> models = {ball_model, map_model, hole_model};
 
     Shader* v_passthrough = new Shader("assets/shaders/passthrough.vs", shader_type::vertex);
     Shader* f_passthrough = new Shader("assets/shaders/passthrough.fs", shader_type::fragment);
@@ -96,7 +105,7 @@ int main(int argc, char** argv)
 
 
     ball_model->set_shader(phong_shader);
-//    light_model->set_shader(texture_shader);
+    hole_model->set_shader(phong_shader);
     map_model->set_shader(phong_shader);
 
     delete v_passthrough;
@@ -116,6 +125,7 @@ int main(int argc, char** argv)
     green_texture.load("assets/sprites/green.png");
 
     ball_model->set_texture(&white_texture);
+    hole_model->set_texture(&white_texture);
     map_model->set_texture(&green_texture);
 
     ball_model->model = glm::mat4(1);
@@ -186,22 +196,35 @@ int main(int argc, char** argv)
                             cull_faces = !cull_faces;
                             std::cout << "cull face mode: " << cull_faces << std::endl;
                             break;
-                        case SDL_KeyCode::SDLK_w:
+                        case SDL_KeyCode::SDLK_UP:
                             camera_position += glm::vec3(0, 1, 0);
                             break;
-                        case SDL_KeyCode::SDLK_s:
+                        case SDL_KeyCode::SDLK_DOWN:
                             camera_position += glm::vec3(0, -1, 0);
                             break;
-                        case SDL_KeyCode::SDLK_a:
+                        case SDL_KeyCode::SDLK_LEFT:
                             camera_around_angle += 0.15;
                             break;
-                        case SDL_KeyCode::SDLK_d:
+                        case SDL_KeyCode::SDLK_RIGHT:
                             camera_around_angle -= 0.15;
                             break;
                         case SDL_KeyCode::SDLK_SPACE:
                             ball_launched = true;
                             ball_velocity = target_velocity;
                             std::cout << "launch ball" << std::endl;
+                            break;
+                        case SDL_KeyCode::SDLK_a:
+                            hole_pos = move_hole(hole_pos, glm::vec2(-0.2f, 0.0f), terrain);
+                            break;
+                        case SDL_KeyCode::SDLK_d:
+                            hole_pos = move_hole(hole_pos, glm::vec2(0.2f, 0.0f), terrain);
+                            break;
+                        case SDL_KeyCode::SDLK_w:
+                            hole_pos = move_hole(hole_pos, glm::vec2(0.0f, -0.2f), terrain);
+                            break;
+                        case SDL_KeyCode::SDLK_s:
+                            hole_pos = move_hole(hole_pos, glm::vec2(0.0f, 0.2f), terrain);
+                            break;
 
                     }
             }
@@ -246,8 +269,12 @@ int main(int argc, char** argv)
 
         float ball_x = ball_pos.x;
         float ball_z = ball_pos.z;
-        ball_model->model = glm::translate(ball_model->model, -0.75f + glm::vec3( ball_x, terrain.get_height(ball_x, ball_z) * 10.f,  ball_z));
+        ball_model->model = glm::translate(ball_model->model, glm::vec3( ball_x, -1.f + terrain.get_height(ball_x, ball_z) * 10.f,  ball_z));
         ball_model->model = glm::scale(ball_model->model, glm::vec3(0.2f, 0.2f, 0.2f));
+
+        hole_model->model = glm::mat4(1);
+        hole_pos.y = -0.75f + terrain.get_height(hole_pos.x, hole_pos.z) * 10.f;
+        hole_model->model = glm::translate(hole_model->model, hole_pos);
         camera_target = glm::vec3(0.0f, 0.0f, 0.0f);
         camera_direction = glm::normalize(camera_position - camera_target);
 
